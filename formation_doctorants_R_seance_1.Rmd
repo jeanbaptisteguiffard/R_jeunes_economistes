@@ -1,0 +1,1492 @@
+---
+title: "R pour jeunes économistes"
+subtitle: "Tidyverse pour la recherche empirique en économie"
+author: "J.-B. Guiffard"
+date: '15 mai 2026'
+output: 
+  beamer_presentation:
+    theme: "Berlin"
+    colortheme: "dolphin"
+    keep_tex: yes
+    latex_engine: xelatex
+fontsize: 10pt
+link-citations: yes
+always_allow_html: yes
+editor_options:
+  markdown:
+    wrap: sentence
+    
+mainfont: "Calibri"
+sansfont: "Calibri"
+monofont: "Consolas"
+
+header-includes:
+  - |
+    % ----------------------------
+    % Fonts
+    % ----------------------------
+    \usepackage{fontspec}
+    \setmainfont{Calibri}
+    \setsansfont{Calibri}
+    \setmonofont{Consolas}
+    \renewcommand{\familydefault}{\sfdefault}
+
+    % ----------------------------
+    % Packages usuels
+    % ----------------------------
+    \usepackage{amssymb,amsmath,amsthm,enumerate}
+    \usepackage{array}
+    \usepackage{parskip}
+    \usepackage{graphicx}
+    \usepackage{caption}
+    \captionsetup[figure]{labelformat=empty}
+    \usepackage{subcaption}
+    \usepackage{bm}
+    \usepackage{multicol}
+    \usepackage{tcolorbox}
+    \usepackage{siunitx}
+    \usepackage{booktabs}
+
+    % ----------------------------
+    % Beamer navigation
+    % ----------------------------
+    % Supprimer les icônes en bas
+    \setbeamertemplate{navigation symbols}{}
+
+    % Activer les mini-frames (petits ronds)
+    \useoutertheme{miniframes}
+
+    % Section en gras dans la barre du haut
+    \setbeamerfont{section in head/foot}{series=\bfseries}
+
+    % ----------------------------
+    % Headline sur 2 lignes :
+    % 1) Sections (en haut)
+    % 2) Mini-frames seuls (en dessous)
+    % ----------------------------
+    \makeatletter
+    \setbeamertemplate{headline}{%
+      % --- Ligne 1 : sections
+      \begin{beamercolorbox}[wd=\paperwidth,ht=2.8ex,dp=1.2ex]{section in head/foot}%
+        \insertsectionnavigationhorizontal{\paperwidth}{}{}%
+      \end{beamercolorbox}%
+    }
+    \makeatother
+
+    % ----------------------------
+    % (Optionnel) : pas de barre sur la slide de titre
+    % ----------------------------
+    \addtobeamertemplate{title page}{\setbeamertemplate{headline}{}}{}
+
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R pour jeunes économistes
+
+## Pourquoi utiliser R en économie appliquée ?
+
+R est aujourd’hui un outil central pour le travail empirique en économie.
+
+Il permet de réaliser l’ensemble de la chaîne de traitement d’un projet de recherche :
+
+$$
+\text{données brutes} \rightarrow \text{nettoyage} \rightarrow \text{analyse} \rightarrow \text{résultats} \rightarrow \text{document final}
+$$
+
+
+Concrètement, R permet de :
+
+- importer, nettoyer et organiser des données ;
+- produire des statistiques descriptives et des graphiques ;
+- estimer des modèles économétriques ;
+- automatiser des tâches répétitives ;
+- produire des documents reproductibles.
+
+
+R n’est pas seulement un logiciel statistique : c’est un outil de travail pour construire une **recherche empirique reproductible**.
+
+
+
+## Une compétence utile pour la recherche
+
+Pour un jeune économiste, apprendre R, ce n’est pas seulement apprendre un langage de programmation.
+
+C’est apprendre à structurer un projet empirique de manière claire, transparente et réutilisable.
+
+
+Un bon script doit permettre de comprendre :
+
+- d’où viennent les données ;
+- quelles transformations ont été appliquées ;
+- comment les résultats ont été produits ;
+- comment reproduire les tableaux, graphiques et estimations.
+
+L'objectif de ce module : Vous donner les bases nécessaires pour utiliser R dans vos propres travaux de recherche, de manière autonome et progressive, et découvrir quelques packages "incontournables" ou pratiques dans votre recherche en économie.
+
+## Quelles sont vos attentes ?
+
+Avant de commencer, prenons quelques minutes pour identifier vos besoins...
+
+Quelques questions :
+
+- Avez-vous déjà utilisé R ou RStudio ?
+- Pour quels types de données souhaitez-vous utiliser R ?
+- Quelles tâches vous posent aujourd’hui le plus de difficultés ?
+- Avez-vous déjà utilisé le tidyverse ?
+- Avez-vous déjà produit un document avec RMarkdown ?
+- Qu’aimeriez-vous être capable de faire à la fin de la formation ?
+
+
+# Tidyverse
+
+## Objet de la séance
+
+Cette première séance est consacrée à l’utilisation du **tidyverse** pour le traitement, l’exploration et la visualisation de données en économie appliquée.
+
+
+
+L’objectif est de comprendre comment passer :
+
+$$
+\text{données brutes} \rightarrow \text{base exploitable} \rightarrow \text{statistiques descriptives} \rightarrow \text{graphiques}
+$$
+
+
+Nous travaillerons à partir d’un exemple concret de base pays-années sur les émissions de CO2.
+
+
+
+$\Rightarrow$ Le tidyverse permet d’écrire un code clair, lisible et reproductible pour construire une base d’analyse.
+
+
+
+## Plan de la séance
+
+La séance est organisée en quatre étapes.
+
+1. Comprendre le rôle du tidyverse dans un projet de recherche empirique
+2. Importer et explorer une base de données
+3. Manipuler les données avec \texttt{dplyr}
+4. Produire des graphiques avec \texttt{ggplot2}
+
+
+Nous terminerons par un discussion autour de vos propres matériaux de recherche. $\Rightarrow$ L'objectif est d'être capable de réutiliser les commandes vues aujourd’hui dans vos propres données de recherche.
+
+
+# Pourquoi le tidyverse ?
+
+## Qu’est-ce que le tidyverse ?
+
+Le **tidyverse** est un ensemble de packages R conçus pour faciliter le travail sur les données.
+
+
+Ces packages partagent une même logique :
+
+- une syntaxe cohérente ;
+- une manière commune de représenter les données ;
+- une organisation du code lisible ;
+- une logique adaptée aux étapes d’un projet empirique.
+
+
+Le tidyverse permet de passer facilement des données brutes à une base exploitable pour l’analyse (plus simplement que le langage R de base).
+
+
+## Qu’est-ce que le tidyverse ?
+
+\centering
+
+![](Figures/2_packages_tidyverse.png)
+
+## Qu’est-ce que le tidyverse ?
+
+
+Dans cette séance, nous utiliserons surtout quatre packages.
+
+
+1. \texttt{readr} : importer des fichiers de données ;
+2. \texttt{dplyr} : sélectionner, filtrer, transformer et résumer les données ;
+3. \texttt{tidyr} : réorganiser les données ;
+4. \texttt{ggplot2} : produire des graphiques.
+
+
+D’autres packages du tidyverse sont également utiles :
+
+- \texttt{tibble} : travailler avec des tableaux de données modernes ;
+- \texttt{stringr} : manipuler du texte ;
+- \texttt{forcats} : manipuler des variables catégorielles ;
+- \texttt{purrr} : automatiser des opérations répétitives.
+
+
+Charger \texttt{tidyverse} permet de charger directement les principaux outils utilisés dans l’analyse de données.
+
+
+
+## Pourquoi est-ce utile pour un doctorant en économie ?
+
+Dans un travail de recherche empirique, une grande partie du temps est consacrée aux données.
+
+
+Avant d’estimer un modèle, il faut souvent :
+
+\begin{itemize}
+  \item importer plusieurs bases ;
+  \item comprendre leur structure ;
+  \item nettoyer les variables ;
+  \item créer des indicateurs ;
+  \item agréger les données au bon niveau ;
+  \item vérifier les valeurs manquantes ;
+  \item produire des statistiques descriptives ;
+  \item représenter graphiquement les principaux faits stylisés.
+\end{itemize}
+
+
+
+Le tidyverse est utile parce qu’il aide à organiser toutes ces étapes dans un code clair et reproductible.
+
+
+## Une logique de workflow empirique
+
+L’objectif n’est pas seulement d’apprendre des fonctions. L’objectif est d’apprendre à construire une chaîne de traitement :
+
+
+$\text{données brutes} \rightarrow \text{données nettoyées} \rightarrow \text{base d’analyse} \rightarrow \text{statistiques} \rightarrow \text{graphiques} \rightarrow \text{résultats}$
+
+
+Avec le tidyverse, cette chaîne peut être écrite de manière lisible :
+
+```{r, eval=FALSE}
+data_raw %>%
+  filter(condition) %>%
+  mutate(new_variable = transformation) %>%
+  group_by(group_variable) %>%
+  summarise(mean_variable = mean(variable, na.rm = TRUE))
+```
+
+(Le pipe \texttt{\%>\%} permet d’enchaîner plusieurs opérations de manière lisible.)
+
+
+
+Le principe est qu'un bon code doit permettre de comprendre comment un résultat a été produit.
+
+
+
+
+## Un exemple de question empirique
+
+Dans cette séance, nous travaillerons à partir d’une base sur les émissions de CO2.
+
+
+Question simple :
+
+\begin{quote}
+Comment les émissions de CO2 par habitant ont-elles évolué selon les pays et les niveaux de développement ?
+\end{quote}
+
+## Un exemple de question empirique
+
+
+Cette question permet d’illustrer plusieurs tâches classiques :
+
+\begin{itemize}
+  \item sélectionner un échantillon d’analyse ;
+  \item créer des variables par habitant ;
+  \item comparer des pays ou des groupes de pays ;
+  \item produire des statistiques descriptives ;
+  \item représenter une évolution dans le temps ;
+  \item visualiser une relation entre deux variables.
+\end{itemize}
+
+
+$\Rightarrow$ L'objectif est donc de construire progressivement une base d’analyse exploitable à partir de données brutes.
+
+
+# Importer et inspecter les données
+
+## Importer et inspecter les données
+
+Avant de manipuler une base, il faut d’abord comprendre ce qu’elle contient.
+
+
+
+Dans ce bloc, nous allons apprendre à :
+
+\begin{itemize}
+  \item importer une base de données dans R ;
+  \item identifier l’unité d’observation ;
+  \item examiner les variables disponibles ;
+  \item repérer les premières difficultés ;
+  \item préparer le passage vers le nettoyage des données.
+\end{itemize}
+
+
+## La base utilisée dans la séance
+
+Nous allons travailler sur la base **CO2 and Greenhouse Gas Emissions** produite par Our World in Data.
+
+
+
+Cette base contient des données annuelles par pays sur :
+
+\begin{itemize}
+  \item les émissions de CO₂ ;
+  \item les émissions de CO₂ par habitant ;
+  \item la population ;
+  \item le PIB ;
+  \item les émissions cumulées ;
+  \item les sources d’émissions liées à l’énergie.
+\end{itemize}
+
+
+
+$\rightarrow$ L’unité d’observation principale est donc : $\text{pays} \times \text{année}$
+
+
+
+Question à toujours se poser : *Que représente une ligne de la base ?*
+
+
+## Charger les packages utiles
+
+Avant de commencer, on charge le package \texttt{tidyverse}.
+
+
+```{r, eval=FALSE}
+library(tidyverse)
+```
+
+Le package charge un ensemble de packages que nous avons précédemment vus.
+
+Bonne pratique : Toujours placer le chargement des packages au début du script.
+
+
+## Avant d’importer : créer un projet R
+
+Avant de charger les données, il est recommandé de créer un **projet RStudio**.
+
+
+Un projet permet de regrouper au même endroit :
+
+\begin{itemize}
+  \item les scripts R ;
+  \item les données brutes et nettoyées ;
+  \item les graphiques et tableaux ;
+  \item les documents produits avec RMarkdown.
+\end{itemize}
+
+
+
+Un projet R permet d’utiliser des chemins relatifs et de rendre l’analyse plus facile à reproduire.
+
+
+
+## Organiser son dossier de travail {.fragile}
+
+Une organisation simple suffit pour commencer.
+
+
+
+\begin{verbatim}
+projet_co2/
+├── data/
+│   ├── raw/
+│   └── clean/
+├── scripts/
+├── outputs/
+│   ├── figures/
+│   └── tables/
+└── projet_co2.Rproj
+\end{verbatim}
+
+
+
+Les données brutes ne doivent pas être modifiées directement : on les importe, on les nettoie, puis on sauvegarde une version propre.
+
+
+## Importer une base CSV
+
+On importe la base avec la fonction \texttt{read\_csv()}.
+
+
+```{r, eval=FALSE}
+co2_raw <- read_csv("DATA/owid-co2-data.csv")
+```
+
+
+
+Cette commande crée un objet appelé \texttt{co2\_raw}.
+
+
+
+Quelques remarques :
+
+\begin{itemize}
+\item \texttt{read\_csv()} est adapté aux fichiers séparés par des virgules ;
+\item le chemin indique où se trouve le fichier ;
+\item l’objet importé est stocké dans l’environnement R ;
+\item le nom \texttt{raw} indique que la base n’a pas encore été modifiée.
+\end{itemize}
+
+
+
+Bonne pratique : Garder une version brute de la base permet de toujours pouvoir revenir aux données initiales.
+
+
+
+
+## Premières commandes d’inspection
+
+Une fois la base importée, on commence par regarder sa structure.
+
+
+
+```{r, eval=FALSE}
+glimpse(co2_raw)
+```
+
+
+
+On peut aussi utiliser :
+
+```{r, eval=FALSE}
+dim(co2_raw)
+names(co2_raw)
+head(co2_raw)
+```
+
+
+
+Ces commandes permettent de répondre à trois questions simples :
+
+\begin{itemize}
+\item combien y a-t-il de lignes et de colonnes ?
+\item quelles sont les variables disponibles ?
+\item à quoi ressemblent les premières observations ?
+\end{itemize}
+
+**Avant toute transformation, toujours inspecter la base.**
+
+
+## Identifier l’unité d’observation
+
+Une étape essentielle consiste à comprendre ce que représente une ligne.
+
+
+Dans notre cas, une ligne correspond en principe à : $\text{un pays ou une zone géographique} \times \text{une année}$
+
+
+On peut le vérifier avec quelques commandes simples :
+
+```{r, eval=FALSE}
+co2_raw %>%
+  select(country, iso_code, year, co2, co2_per_capita) %>%
+  head()
+```
+
+
+
+*La base contient-elle uniquement des pays, ou aussi des régions et des agrégats ?*
+
+
+## Pays, régions et agrégats
+
+Les bases internationales contiennent souvent à la fois :
+
+\begin{itemize}
+  \item des pays ;
+  \item des continents ;
+  \item des groupes de pays ;
+  \item des agrégats mondiaux.
+\end{itemize}
+
+
+
+Dans notre base, on peut identifier certains agrégats :
+
+```{r, eval=FALSE}
+co2_raw %>%
+  filter(is.na(iso_code)) %>%
+  distinct(country) %>%
+  arrange(country)
+```
+
+
+Attention : Ne pas distinguer pays et agrégats peut conduire à des statistiques descriptives trompeuses.
+
+
+## Explorer les années disponibles
+
+Avant de définir un échantillon, il faut connaître la période couverte par la base.
+
+\vspace{0.2cm}
+
+```{r, eval=FALSE}
+co2_raw %>%
+  summarise(
+    first_year = min(year, na.rm = TRUE),
+    last_year = max(year, na.rm = TRUE)
+  )
+```
+
+\vspace{0.3cm}
+
+On peut aussi regarder le nombre d’observations par année :
+
+```{r, eval=FALSE}
+co2_raw %>%
+  count(year) %>%
+  arrange(year)
+```
+
+*La couverture temporelle est-elle homogène entre les pays ?*
+
+
+## Explorer les variables clés
+
+Pour notre analyse, certaines variables sont particulièrement importantes.
+
+\vspace{0.2cm}
+
+```{r, eval=FALSE}
+co2_raw %>%
+  select(country, iso_code, year, population, gdp, co2, co2_per_capita) %>%
+  glimpse()
+```
+
+## Explorer les variables clés
+
+Variables utiles :
+
+\begin{itemize}
+\item \texttt{country} : nom du pays ou de la zone ;
+\item \texttt{iso\_code} : code pays ;
+\item \texttt{year} : année ;
+\item \texttt{population} : population ;
+\item \texttt{gdp} : PIB ;
+\item \texttt{co2} : émissions annuelles de CO₂ ;
+\item \texttt{co2\_per\_capita} : émissions de CO₂ par habitant.
+\end{itemize}
+
+
+L'objectif est d'identifier les variables nécessaires pour construire la base d’analyse.
+
+
+
+## Vérifier les valeurs manquantes
+
+Les valeurs manquantes sont très fréquentes dans les données empiriques.
+
+
+On peut les compter pour quelques variables importantes :
+
+```{r, eval=FALSE}
+co2_raw %>%
+  summarise(
+    missing_population = sum(is.na(population)),
+    missing_gdp = sum(is.na(gdp)),
+    missing_co2 = sum(is.na(co2)),
+    missing_co2_pc = sum(is.na(co2_per_capita))
+  )
+```
+
+Attention : Supprimer les valeurs manquantes n’est jamais une opération neutre : cela modifie l’échantillon étudié.
+
+
+## Vérifier les doublons
+
+Dans une base pays-années, on s’attend à avoir au plus une observation par pays et par année.
+
+
+On peut vérifier cette structure avec :
+
+```{r, eval=FALSE}
+co2_raw %>%
+  count(country, year) %>%
+  filter(n > 1)
+```
+
+
+Si cette commande renvoie des lignes, cela signifie qu’il existe plusieurs observations pour un même pays et une même année.
+
+
+Bonne pratique : Toujours vérifier que la structure de la base correspond à l’unité d’observation attendue.
+
+
+
+## Préparer la suite
+
+À ce stade, nous avons commencé à comprendre la base.
+
+Nous savons :
+
+\begin{itemize}
+  \item quelles variables sont disponibles ;
+  \item quelle est l’unité d’observation ;
+  \item quelle période est couverte ;
+  \item quelles variables contiennent des valeurs manquantes ;
+  \item si la base contient des pays, des régions ou des agrégats.
+\end{itemize}
+
+
+La prochaine étape consiste à construire une base plus propre pour l’analyse.
+
+
+
+# Construire une base d’analyse
+
+## De la base brute à la base d’analyse
+
+Une base brute contient souvent trop d’informations pour répondre directement à une question empirique.
+
+Construire une base d’analyse consiste à :
+
+\begin{itemize}
+  \item sélectionner les observations utiles ;
+  \item garder les variables nécessaires ;
+  \item créer de nouvelles variables ;
+  \item traiter les valeurs manquantes ;
+  \item vérifier que l’unité d’observation est correcte.
+\end{itemize}
+
+
+Une base d’analyse est une version structurée de la base brute, construite pour répondre à une question de recherche précise.
+
+
+## Définir une question empirique simple
+
+Dans cette séance, nous partons d’une question descriptive :
+
+
+*Comment les émissions de CO2 par habitant évoluent-elles selon les pays depuis 1990 ?*
+
+
+Pour répondre à cette question, nous avons besoin :
+
+\begin{itemize}
+  \item d’une unité d’observation pays-année ;
+  \item d’une période d’analyse ;
+  \item d’une variable d’émissions par habitant ;
+  \item de quelques variables de comparaison ;
+  \item d’un échantillon cohérent.
+\end{itemize}
+
+
+**Avant de nettoyer une base, il faut savoir ce que l’on cherche à analyser.**
+
+
+
+## Sélectionner les observations utiles
+
+On commence par restreindre la base à l’échantillon souhaité.
+
+
+
+```{r, eval=FALSE}
+
+co2_analysis <- co2_raw %>%
+  filter(
+    year >= 1990,
+    !is.na(iso_code)
+  )
+```
+
+
+
+Ici, on garde :
+
+\begin{itemize}
+\item les observations depuis 1990 ;
+\item les observations avec un code pays ;
+\item donc principalement les pays, et non les grands agrégats.
+\end{itemize}
+
+
+
+Attention : Le choix de l’échantillon doit toujours être explicite et justifié.
+
+## Sélectionner les variables utiles
+
+Une fois l’échantillon défini, on garde les variables nécessaires.
+
+
+
+```{r, eval=FALSE}
+
+co2_analysis <- co2_raw %>%
+  filter(
+    year >= 1990,
+    !is.na(iso_code)
+  ) %>%
+  select(
+    country, iso_code, year,
+    population, gdp,
+    co2, co2_per_capita
+  )
+```
+
+
+Cela permet d’obtenir une base plus lisible.
+
+Bonne pratique : Ne garder que les variables utiles facilite la lecture du code et réduit les risques d’erreur.
+
+
+## Créer de nouvelles variables
+
+Les variables directement disponibles ne suffisent pas toujours.
+
+On peut créer de nouveaux indicateurs avec \texttt{mutate()}.
+
+
+
+```{r, eval=FALSE}
+
+co2_analysis <- co2_analysis %>%
+  mutate(
+    gdp_per_capita = gdp / population,
+    log_gdp_pc = log(gdp_per_capita),
+    log_co2_pc = log(co2_per_capita)
+  )
+```
+
+
+Ici, on crée :
+
+\begin{itemize}
+\item le PIB par habitant ;
+\item le log du PIB par habitant ;
+\item le log des émissions de CO₂ par habitant.
+\end{itemize}
+
+Attention : Le logarithme n’est défini que pour des valeurs strictement positives.
+
+
+
+## Traiter les valeurs manquantes
+
+Avant d’utiliser une variable, il faut vérifier si elle contient des valeurs manquantes.
+
+
+```{r, eval=FALSE}
+
+co2_analysis %>%
+  summarise(
+    missing_population = sum(is.na(population)),
+    missing_gdp = sum(is.na(gdp)),
+    missing_co2_pc = sum(is.na(co2_per_capita))
+  )
+```
+
+
+## Traiter les valeurs manquantes
+
+On peut ensuite restreindre la base aux observations exploitables :
+
+```{r, eval=FALSE}
+
+co2_analysis <- co2_analysis %>%
+  filter(
+    !is.na(population),
+    !is.na(gdp),
+    !is.na(co2_per_capita)
+  )
+```
+
+
+Attention : Supprimer des valeurs manquantes modifie l’échantillon $\rightarrow$ ce choix doit être documenté.
+
+## Vérifier la base obtenue
+
+Après nettoyage, il faut toujours vérifier la base produite.
+
+
+
+```{r, eval=FALSE}
+
+glimpse(co2_analysis)
+
+co2_analysis %>%
+  summarise(
+    n_obs = n(),
+    n_countries = n_distinct(country),
+    first_year = min(year),
+    last_year = max(year)
+  )
+```
+
+
+
+## Vérifier la base obtenue
+
+Ces commandes permettent de vérifier :
+
+\begin{itemize}
+\item le nombre d’observations ;
+\item le nombre de pays ;
+\item la période couverte ;
+\item le type des variables.
+\end{itemize}
+
+
+Après chaque étape importante de nettoyage, vérifier que la base obtenue correspond à ce que l’on attend.
+
+
+## Une chaîne complète de traitement
+
+On peut regrouper les étapes dans une seule chaîne lisible.
+
+
+\small
+
+```{r, eval=FALSE}
+
+co2_analysis <- co2_raw %>%
+  filter(
+    year >= 1990,
+    !is.na(iso_code),
+    !is.na(population),
+    !is.na(gdp),
+    !is.na(co2_per_capita),
+    population > 0,
+    gdp > 0,
+    co2_per_capita > 0
+  ) %>%
+  mutate(
+    gdp_per_capita = gdp / population,
+    log_gdp_pc = log(gdp_per_capita),
+    log_co2_pc = log(co2_per_capita)
+  ) %>%
+  select(
+    country, iso_code, year,
+    population, gdp, gdp_per_capita,
+    co2, co2_per_capita,
+    log_gdp_pc, log_co2_pc
+  )
+```
+
+
+$\Rightarrow$ La construction de la base d’analyse doit être explicite, reproductible et compréhensible.
+
+
+## Documenter ses choix
+
+Construire une base d’analyse implique toujours des décisions.
+
+
+Exemples :
+
+\begin{itemize}
+  \item pourquoi commencer en 1990 ?
+  \item pourquoi supprimer les observations sans code pays ?
+  \item pourquoi exclure les valeurs manquantes ?
+  \item pourquoi utiliser des variables par habitant ?
+  \item pourquoi passer certaines variables en logarithme ?
+\end{itemize}
+
+
+Ces choix doivent être visibles dans le code et expliqués dans le travail de recherche.
+
+
+
+Un script ne doit pas seulement produire un résultat : il doit aussi rendre compréhensible le chemin qui mène au résultat.
+
+
+## Vers l’analyse descriptive...
+
+Nous disposons maintenant d’une base d’analyse plus propre.
+
+
+Elle permet de produire :
+
+\begin{itemize}
+  \item des statistiques descriptives ;
+  \item des comparaisons entre pays ;
+  \item des évolutions temporelles ;
+  \item des graphiques exploratoires ;
+  \item une première analyse économétrique simple.
+\end{itemize}
+
+
+
+Utiliser cette base pour produire des faits stylisés clairs et interprétables.
+
+
+# Statistiques descriptives
+
+## Pourquoi commencer par des statistiques descriptives ?
+
+Avant d’estimer un modèle, il faut comprendre les données.
+
+Les statistiques descriptives permettent de répondre à des questions simples :
+
+\begin{itemize}
+  \item combien d’observations sont disponibles ?
+  \item combien de pays sont couverts ?
+  \item quelle est la période étudiée ?
+  \item quelles sont les valeurs moyennes et médianes ?
+  \item les variables contiennent-elles beaucoup de valeurs manquantes ?
+  \item existe-t-il des valeurs extrêmes ?
+\end{itemize}
+
+
+Les statistiques descriptives sont la première étape de toute analyse empirique sérieuse.
+
+## Décrire l’échantillon d’analyse
+
+On commence par décrire la base dans son ensemble.
+
+\vspace{0.2cm}
+
+```{r, eval=FALSE}
+
+co2_analysis %>%
+  summarise(
+    n_obs = n(),
+    n_countries = n_distinct(country),
+    first_year = min(year, na.rm = TRUE),
+    last_year = max(year, na.rm = TRUE)
+  )
+```
+
+
+Cette étape permet de vérifier :
+
+\begin{itemize}
+\item la taille de la base ;
+\item le nombre de pays observés ;
+\item la période couverte ;
+\item la cohérence avec l’échantillon souhaité.
+\end{itemize}
+
+
+Toujours décrire l’échantillon avant de présenter des résultats.
+
+
+## Décrire une variable quantitative
+
+On peut résumer une variable avec quelques indicateurs simples.
+
+
+
+```{r, eval=FALSE}
+
+co2_analysis %>%
+  summarise(
+    mean_co2_pc = mean(co2_per_capita, na.rm = TRUE),
+    median_co2_pc = median(co2_per_capita, na.rm = TRUE),
+    sd_co2_pc = sd(co2_per_capita, na.rm = TRUE),
+    min_co2_pc = min(co2_per_capita, na.rm = TRUE),
+    max_co2_pc = max(co2_per_capita, na.rm = TRUE)
+  )
+```
+
+
+Ces statistiques donnent une première idée :
+
+\begin{itemize}
+\item du niveau moyen de la variable ;
+\item de la dispersion ;
+\item de l’existence éventuelle de valeurs extrêmes.
+\end{itemize}
+
+
+Attention : La moyenne peut être fortement influencée par quelques observations extrêmes.
+
+
+## Comparer moyenne et médiane
+
+La comparaison entre moyenne et médiane est souvent informative.
+
+```{r, eval=FALSE}
+co2_analysis %>%
+  summarise(
+    mean_co2_pc = mean(co2_per_capita, na.rm = TRUE),
+    median_co2_pc = median(co2_per_capita, na.rm = TRUE)
+  )
+```
+
+Si la moyenne est très supérieure à la médiane, cela peut indiquer que :
+
+\begin{itemize}
+\item la distribution est asymétrique ;
+\item quelques pays ont des émissions très élevées ;
+\item la variable peut nécessiter une transformation logarithmique.
+\end{itemize}
+
+Les statistiques descriptives ne sont pas seulement techniques : elles aident à comprendre la structure des données.
+
+## Décrire plusieurs variables
+
+On peut produire des statistiques descriptives pour plusieurs variables à la fois.
+
+
+```{r, eval=FALSE}
+co2_analysis %>%
+  summarise(
+    across(
+      c(co2_per_capita, gdp_per_capita, population),
+      list(
+        mean = ~ mean(.x, na.rm = TRUE),
+        median = ~ median(.x, na.rm = TRUE),
+        sd = ~ sd(.x, na.rm = TRUE)
+      )
+    )
+  )
+```
+
+
+La fonction \texttt{across()} permet d’appliquer les mêmes calculs à plusieurs variables.
+
+Bonne pratique : Éviter de répéter le même code plusieurs fois : cela réduit les erreurs et facilite les modifications.
+
+
+## Statistiques par groupe
+
+Dans une analyse empirique, on souhaite souvent comparer des groupes.
+
+
+Par exemple, on peut calculer les émissions moyennes par pays :
+
+```{r, eval=FALSE}
+
+country_stats <- co2_analysis %>%
+  group_by(country) %>%
+  summarise(
+    mean_co2_pc = mean(co2_per_capita, na.rm = TRUE),
+    mean_gdp_pc = mean(gdp_per_capita, na.rm = TRUE),
+    n_years = n(),
+    .groups = "drop"
+  )
+```
+
+
+
+
+\texttt{group\_by()} définit les groupes ; \texttt{summarise()} calcule les indicateurs pour chaque groupe.
+
+
+## Classer les observations
+
+Après avoir calculé des statistiques par pays, on peut classer les résultats.
+
+
+```{r, eval=FALSE}
+
+country_stats %>%
+  arrange(desc(mean_co2_pc)) %>%
+  select(country, mean_co2_pc, mean_gdp_pc) %>%
+  head(10)
+```
+
+
+Ce type de commande permet d’identifier rapidement :
+
+\begin{itemize}
+\item les pays avec les émissions les plus élevées ;
+\item les pays atypiques ;
+\item les observations à vérifier plus attentivement.
+\end{itemize}
+
+Attention : Un classement descriptif ne constitue pas une explication causale.
+
+
+## Évolution dans le temps
+
+On peut également produire des statistiques descriptives par année.
+
+
+```{r, eval=FALSE}
+year_stats <- co2_analysis %>%
+  group_by(year) %>%
+  summarise(
+    mean_co2_pc = mean(co2_per_capita, na.rm = TRUE),
+    median_co2_pc = median(co2_per_capita, na.rm = TRUE),
+    n_countries = n_distinct(country),
+    .groups = "drop"
+  )
+```
+
+
+
+Cette table permet de suivre :
+
+\begin{itemize}
+\item l’évolution moyenne des émissions ;
+\item la couverture de la base au cours du temps ;
+\item les ruptures ou changements de tendance.
+\end{itemize}
+
+
+Cette table pourra ensuite être utilisée pour produire un graphique d’évolution temporelle.
+
+
+## Repérer les valeurs extrêmes
+
+Certaines observations peuvent fortement influencer les résultats.
+
+
+```{r, eval=FALSE}
+co2_analysis %>%
+  arrange(desc(co2_per_capita)) %>%
+  select(country, year, co2_per_capita, gdp_per_capita) %>%
+  head(10)
+```
+
+
+Cette étape permet de repérer :
+
+\begin{itemize}
+\item des pays très atypiques ;
+\item des erreurs possibles de mesure ;
+\item des observations qui méritent une vérification ;
+\item des cas intéressants à discuter.
+\end{itemize}
+
+Bonne pratique : Une valeur extrême ne doit pas être supprimée automatiquement : elle doit d’abord être comprise.
+
+## Produire une table claire
+
+Pour un article, un mémoire ou une thèse, les statistiques descriptives doivent être lisibles.
+
+```{r, eval=FALSE}
+
+desc_table <- co2_analysis %>%
+  summarise(
+    Observations = n(),
+    Pays = n_distinct(country),
+    `CO2 par habitant moyen` = mean(co2_per_capita, na.rm = TRUE),
+    `PIB par habitant moyen` = mean(gdp_per_capita, na.rm = TRUE)
+  )
+
+desc_table
+```
+
+## D'autres packages utiles
+
+Le tidyverse permet déjà de produire des statistiques descriptives simples.
+
+
+Mais certains packages facilitent la production de tableaux plus propres et plus rapides :
+
+\begin{itemize}
+  \item \texttt{table1} : tableaux descriptifs par groupes ;
+  \item \texttt{skimr} : résumé rapide d’une base de données ;
+  \item \texttt{summarytools} : statistiques descriptives détaillées ;
+  \item \texttt{gtsummary} : tableaux descriptifs prêts pour rapports/articles ;
+  \item \texttt{modelsummary} : tableaux de statistiques et résultats de régression.
+\end{itemize}
+
+
+# Les erreurs classiques
+
+## Pourquoi parler des erreurs ?
+
+Les erreurs dans le traitement des données sont fréquentes.
+
+
+Elles peuvent venir :
+
+\begin{itemize}
+  \item d’une mauvaise compréhension de la base ;
+  \item d’un mauvais choix d’échantillon ;
+  \item d’un problème d’unité ;
+  \item de valeurs manquantes mal traitées ;
+  \item d’une confusion entre corrélation et causalité ;
+  \item d’un code difficile à relire.
+\end{itemize}
+
+
+Une partie importante du travail empirique consiste à éviter les erreurs silencieuses.
+
+## Les erreurs à éviter
+
+Dans un travail empirique, certaines erreurs reviennent très souvent.
+
+
+
+\begin{itemize}
+  \item Ne pas vérifier l’unité d’observation de la base.
+  \item Mélanger pays, régions et agrégats sans s’en rendre compte.
+  \item Supprimer les valeurs manquantes sans regarder quelles observations disparaissent.
+  \item Oublier les unités des variables : total, par habitant, pourcentage, logarithme.
+  \item Créer une variable en logarithme sans vérifier les valeurs nulles ou négatives.
+\end{itemize}
+
+
+## Les erreurs à éviter
+
+\begin{itemize}
+  \item Agréger les données sans réfléchir au niveau pertinent d’analyse.
+  \item Écraser la base brute au lieu de créer une base nettoyée.
+  \item Ne pas vérifier la base après un filtre, une jointure ou une transformation.
+  \item Confondre corrélation descriptive et relation causale.
+  \item Produire un code difficile à relire ou à reproduire.
+\end{itemize}
+
+La qualité d’une analyse empirique dépend autant des choix de nettoyage que des modèles estimés.
+
+
+# Des graphiques utiles pour économistes avec GGPLOT2
+
+## Des graphiques utiles pour économistes
+
+Les graphiques sont une étape importante du travail empirique.
+
+
+Ils permettent de :
+
+\begin{itemize}
+  \item comprendre la distribution des variables ;
+  \item repérer des valeurs extrêmes ;
+  \item suivre des évolutions dans le temps ;
+  \item comparer des groupes ;
+  \item visualiser des relations entre variables ;
+  \item formuler des hypothèses pour l’analyse économétrique.
+\end{itemize}
+
+
+
+Un bon graphique ne remplace pas l’analyse économétrique, mais il aide à comprendre les données.
+
+
+## La logique de ggplot
+
+Un graphique avec \texttt{ggplot2} se construit par couches successives (*the grammar of graphics*).
+
+```{r, eval=FALSE}
+ggplot(data = co2_analysis, aes(x = co2_per_capita)) +
+  geom_histogram() +
+  labs(
+    title = "Titre du graphique",
+    x = "Nom de l’axe horizontal",
+    y = "Nom de l’axe vertical"
+  ) +
+  theme_minimal()
+```
+
+
+## La logique de ggplot
+
+Les éléments principaux sont :
+
+\begin{itemize}
+\item \texttt{data} : la base utilisée ;
+\item \texttt{aes()} : les variables représentées ;
+\item \texttt{geom\_*()} : le type de graphique ;
+\item \texttt{labs()} : les titres et labels ;
+\item \texttt{theme\_*()} : l’apparence du graphique.
+\end{itemize}
+
+
+## Étudier une distribution
+
+Un histogramme permet de visualiser la distribution d’une variable quantitative.
+
+
+```{r, eval=FALSE}
+
+ggplot(co2_analysis, aes(x = co2_per_capita)) +
+  geom_histogram(bins = 40) +
+  labs(
+    title = "Distribution des émissions de CO₂ par habitant",
+    x = "CO₂ par habitant",
+    y = "Nombre d'observations"
+  ) +
+  theme_minimal()
+```
+
+
+Ce graphique permet de repérer :
+
+\begin{itemize}
+\item la concentration des observations ;
+\item l’asymétrie de la distribution ;
+\item la présence de valeurs extrêmes.
+\end{itemize}
+
+
+La variable est-elle distribuée de manière symétrique ?
+
+
+## Distribution : pourquoi utiliser le log ?
+
+Certaines variables économiques ont des distributions très asymétriques.
+
+
+
+C’est souvent le cas pour :
+
+\begin{itemize}
+  \item le PIB ;
+  \item la population ;
+  \item les revenus ;
+  \item les émissions de CO₂.
+\end{itemize}
+
+## Distribution : pourquoi utiliser le log ?
+
+
+On peut alors représenter la variable en logarithme.
+
+```{r, eval=FALSE}
+
+ggplot(co2_analysis, aes(x = log_co2_pc)) +
+  geom_histogram(bins = 40) +
+  labs(
+    title = "Distribution du log des émissions de CO2 par habitant",
+    x = "log(CO₂ par habitant)",
+    y = "Nombre d'observations"
+  ) +
+  theme_minimal()
+```
+
+Attention : Le logarithme n’est défini que pour les valeurs strictement positives.
+
+
+## Étudier une évolution temporelle
+
+On commence par construire une base agrégée par année.
+
+```{r, eval=FALSE}
+
+co2_year <- co2_analysis %>%
+  group_by(year) %>%
+  summarise(
+    mean_co2_pc = mean(co2_per_capita, na.rm = TRUE),
+    median_co2_pc = median(co2_per_capita, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+
+Cette base permet de suivre l’évolution moyenne des émissions de CO2 par habitant.
+
+
+Avant de faire un graphique, il faut souvent construire la table correspondant au niveau d’analyse souhaité.
+
+
+## Série temporelle
+
+Une courbe permet de représenter l’évolution d’une variable dans le temps.
+
+
+```{r, eval=FALSE}
+
+ggplot(co2_year, aes(x = year, y = mean_co2_pc)) +
+  geom_line() +
+  labs(
+    title = "Évolution moyenne des émissions de CO2 par habitant",
+    x = "Année",
+    y = "CO2 par habitant moyen"
+  ) +
+  theme_minimal()
+```
+
+
+Ce graphique permet d’observer :
+
+\begin{itemize}
+\item une tendance générale ;
+\item des ruptures éventuelles ;
+\item des périodes de hausse ou de baisse ;
+\item des changements dans la dynamique temporelle.
+\end{itemize}
+
+
+## Moyenne ou médiane ?
+
+La moyenne et la médiane ne donnent pas toujours la même information.
+
+
+```{r, eval=FALSE}
+
+ggplot(co2_year, aes(x = year)) +
+  geom_line(aes(y = mean_co2_pc), linetype = "solid") +
+  geom_line(aes(y = median_co2_pc), linetype = "dashed") +
+  labs(
+    title = "Émissions de CO2 par habitant : moyenne et médiane",
+    x = "Année",
+    y = "CO2 par habitant"
+  ) +
+  theme_minimal()
+```
+
+
+
+## Visualiser une relation entre deux variables
+
+On construit d’abord une base au niveau pays.
+
+
+```{r, eval=FALSE}
+
+country_summary <- co2_analysis %>%
+  group_by(country) %>%
+  summarise(
+    mean_gdp_pc = mean(gdp_per_capita, na.rm = TRUE),
+    mean_co2_pc = mean(co2_per_capita, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(mean_gdp_pc > 0, mean_co2_pc > 0)
+```
+
+Cette base permet de comparer les pays selon leur niveau moyen de développement et leurs émissions moyennes.
+
+
+
+## PIB par habitant et émissions de CO2
+
+Un nuage de points permet de visualiser la relation entre deux variables quantitatives.
+
+
+```{r, eval=FALSE}
+
+ggplot(country_summary, aes(x = mean_gdp_pc, y = mean_co2_pc)) +
+  geom_point(alpha = 0.6) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "PIB par habitant et émissions de CO2 par habitant",
+    subtitle = "Moyennes par pays depuis 1990",
+    x = "PIB par habitant, échelle log",
+    y = "CO2 par habitant, échelle log"
+  ) +
+  theme_minimal()
+```
+
+
+
+Chaque point représente un pays. La droite résume la relation moyenne entre les deux variables.
+
+## Corrélation, visualisation et causalité
+
+Le graphique précédent peut suggérer une relation entre développement économique et émissions de CO2
+
+
+Mais il ne permet pas de conclure que : $\text{PIB par habitant} \rightarrow \text{émissions de CO₂ par habitant}$
+
+
+Plusieurs problèmes peuvent exister :
+
+\begin{itemize}
+  \item variables omises ;
+  \item causalité inverse ;
+  \item différences structurelles entre pays ;
+  \item trajectoires historiques différentes ;
+  \item effets de composition sectorielle.
+\end{itemize}
+
+Un graphique décrit une relation. Il ne suffit pas à identifier un effet causal.
+
+
+##
+
+\centering
+\huge
+
+Merci beaucoup pour votre attention !
+
+Maintenant discutons de vos recherches !

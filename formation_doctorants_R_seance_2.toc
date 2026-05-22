@@ -1,0 +1,8 @@
+\beamer@sectionintoc {1}{Données spatiales et cartes avec R}{2}{0}{1}
+\beamer@sectionintoc {2}{Pourquoi les données spatiales en économie ?}{6}{0}{2}
+\beamer@sectionintoc {3}{Comprendre les objets spatiaux}{21}{0}{3}
+\beamer@sectionintoc {4}{Lire et manipuler des données avec sf}{42}{0}{4}
+\beamer@sectionintoc {5}{Produire une première carte}{60}{0}{5}
+\beamer@sectionintoc {6}{Joindre données statistiques et carte}{75}{0}{6}
+\beamer@sectionintoc {7}{Points, distances et intersections}{92}{0}{7}
+\beamer@sectionintoc {8}{Introduction aux rasters}{115}{0}{8}

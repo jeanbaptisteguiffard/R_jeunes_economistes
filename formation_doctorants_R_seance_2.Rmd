@@ -1,0 +1,3329 @@
+---
+title: "R pour jeunes économistes"
+subtitle: "Manipuler des données cartographique sur R"
+author: "J.-B. Guiffard"
+date: '22 mai 2026'
+output: 
+  beamer_presentation:
+    theme: "Berlin"
+    colortheme: "dolphin"
+    keep_tex: yes
+    latex_engine: xelatex
+fontsize: 10pt
+link-citations: yes
+always_allow_html: yes
+editor_options:
+  markdown:
+    wrap: sentence
+    
+mainfont: "Calibri"
+sansfont: "Calibri"
+monofont: "Consolas"
+
+header-includes:
+  - |
+    % ----------------------------
+    % Fonts
+    % ----------------------------
+    \usepackage{fontspec}
+    \setmainfont{Calibri}
+    \setsansfont{Calibri}
+    \setmonofont{Consolas}
+    \renewcommand{\familydefault}{\sfdefault}
+
+    % ----------------------------
+    % Packages usuels
+    % ----------------------------
+    \usepackage{amssymb,amsmath,amsthm,enumerate}
+    \usepackage{array}
+    \usepackage{parskip}
+    \usepackage{graphicx}
+    \usepackage{caption}
+    \captionsetup[figure]{labelformat=empty}
+    \usepackage{subcaption}
+    \usepackage{bm}
+    \usepackage{multicol}
+    \usepackage{tcolorbox}
+    \usepackage{siunitx}
+    \usepackage{booktabs}
+
+    % ----------------------------
+    % Beamer navigation
+    % ----------------------------
+    % Supprimer les icônes en bas
+    \setbeamertemplate{navigation symbols}{}
+
+    % Activer les mini-frames (petits ronds)
+    \useoutertheme{miniframes}
+
+    % Section en gras dans la barre du haut
+    \setbeamerfont{section in head/foot}{series=\bfseries}
+
+    % ----------------------------
+    % Headline sur 2 lignes :
+    % 1) Sections (en haut)
+    % 2) Mini-frames seuls (en dessous)
+    % ----------------------------
+    \makeatletter
+    \setbeamertemplate{headline}{%
+      % --- Ligne 1 : sections
+      \begin{beamercolorbox}[wd=\paperwidth,ht=2.8ex,dp=1.2ex]{section in head/foot}%
+        \insertsectionnavigationhorizontal{\paperwidth}{}{}%
+      \end{beamercolorbox}%
+    }
+    \makeatother
+
+    % ----------------------------
+    % (Optionnel) : pas de barre sur la slide de titre
+    % ----------------------------
+    \addtobeamertemplate{title page}{\setbeamertemplate{headline}{}}{}
+
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Données spatiales et cartes avec R
+
+## Objet de la séance
+
+Cette séance est consacrée à l’utilisation de R pour manipuler, analyser et représenter des données spatiales.
+
+
+L’objectif est de comprendre comment passer :
+
+$$
+\text{données géographiques}
+\rightarrow
+\text{base spatiale}
+\rightarrow
+\text{carte}
+\rightarrow
+\text{variable d’analyse}
+$$
+
+
+Nous verrons comment utiliser R pour :
+
+- lire des fichiers cartographiques ;
+- manipuler des objets spatiaux ;
+- produire des cartes ;
+- joindre des données statistiques à des géométries ;
+- calculer des distances et des intersections ;
+- introduire les données raster.
+
+
+## Pourquoi spatialiser les données ?
+
+De nombreuses questions en économie appliquée ont une dimension spatiale.
+
+
+Exemples :
+
+\begin{itemize}
+  \item accès aux infrastructures ;
+  \item exposition au climat ou à la pollution ;
+  \item distance aux marchés, aux routes ou aux services publics ;
+  \item inégalités territoriales ;
+  \item localisation des entreprises, écoles ou ménages ;
+  \item diffusion spatiale d’un traitement ou d’une politique publique.
+\end{itemize}
+
+
+
+$\Rightarrow$ Spatialiser les données permet de relier des phénomènes économiques à des lieux, des distances et des territoires.
+
+
+## Plan de la séance
+
+
+1. Comprendre les principaux types de données spatiales
+2. Lire et manipuler des données vectorielles avec `sf`
+3. Produire des cartes avec `ggplot2`, `tmap` et `mapview`
+4. Joindre des données socio-économiques à des données géographiques
+5. Manipuler des points, des distances et des rasters
+
+
+# Pourquoi les données spatiales en économie ?
+
+## Pourquoi spatialiser les données ?
+
+De nombreuses questions en économie appliquée ont une dimension spatiale.
+
+
+
+Les phénomènes économiques ne se distribuent pas de manière uniforme dans l’espace :
+
+\begin{itemize}
+  \item les infrastructures sont localisées ;
+  \item les ménages et les entreprises sont situés à des endroits précis ;
+  \item les politiques publiques peuvent cibler certains territoires ;
+  \item les conditions climatiques varient selon les lieux ;
+  \item l’accès aux marchés, aux écoles ou aux services publics dépend de la distance.
+\end{itemize}
+
+
+
+
+## Quelques exemples de questions de recherche
+
+Les données spatiales peuvent être utiles dans de nombreux champs de l’économie.
+
+
+
+\begin{itemize}
+  \item Quel est l’effet de l’accès à une route sur l’activité économique locale ?
+  \item Les écoles connectées à Internet obtiennent-elles de meilleurs résultats ?
+  \item Comment l’exposition à la sécheresse affecte-t-elle les revenus agricoles ?
+  \item Les entreprises proches d’une infrastructure numérique deviennent-elles plus productives ?
+  \item Les ménages éloignés des services publics sont-ils moins bien couverts ?
+  \item Comment les politiques publiques se diffusent-elles entre territoires voisins ?
+\end{itemize}
+
+
+
+
+
+
+
+## Trois usages des données spatiales
+
+Dans un projet empirique, les données spatiales peuvent servir à plusieurs choses.
+
+
+
+\begin{enumerate}
+  \item \textbf{Décrire} : représenter la distribution spatiale d’un phénomène.
+  \item \textbf{Construire des variables} : distance, exposition, accessibilité, appartenance à une zone.
+  \item \textbf{Analyser} : étudier les inégalités territoriales, les effets de voisinage ou l’impact d’une politique localisée.
+\end{enumerate}
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item distance à une route, un port ou une capitale ;
+  \item exposition à une température ou une sécheresse ;
+  \item nombre d’écoles dans une commune ;
+  \item appartenance à une zone traitée.
+\end{itemize}
+
+
+
+
+
+## Exemple 1 : infrastructures et développement
+
+Supposons que l’on étudie l’effet d’une nouvelle route, d’un câble Internet ou d’une ligne électrique.
+
+
+
+Les données spatiales permettent de construire plusieurs variables :
+
+\begin{itemize}
+  \item distance à l’infrastructure ;
+  \item présence de l’infrastructure dans une zone ;
+  \item date d’arrivée de l’infrastructure ;
+  \item nombre d’infrastructures autour d’un lieu ;
+  \item exposition différenciée selon la proximité.
+\end{itemize}
+
+
+
+Ces variables peuvent ensuite être utilisées dans une analyse économétrique.
+
+
+
+Ex : Comparer les zones proches et éloignées d’une infrastructure avant et après son déploiement.
+
+
+
+## Exemple 1 : infrastructures et développement
+
+\centering
+
+![](figures/carte_ex_1.png)
+
+## Exemple 2 : climat, agriculture et revenus
+
+Les données climatiques sont souvent disponibles sous forme de grilles spatiales.
+
+
+
+Chaque pixel peut contenir une information :
+
+\begin{itemize}
+  \item température ;
+  \item précipitations ;
+  \item sécheresse ;
+  \item humidité des sols ;
+  \item végétation ;
+  \item altitude.
+\end{itemize}
+
+## Exemple 2
+
+On peut ensuite associer ces informations à des unités économiques :
+
+\begin{itemize}
+  \item ménages ;
+  \item exploitations agricoles ;
+  \item communes ;
+  \item régions ;
+  \item pays.
+\end{itemize}
+
+
+
+Question empirique : Comment l’exposition à un choc climatique affecte-t-elle les revenus, les migrations ou la production agricole ?
+
+## Exemple 2
+
+\centering
+
+![](figures/ndvi.png)
+
+## Exemple 3 : services publics et accessibilité
+
+L’accès aux services publics dépend souvent de la localisation.
+
+
+
+On peut étudier par exemple :
+
+\begin{itemize}
+  \item la distance à l’école la plus proche ;
+  \item la distance à un centre de santé ;
+  \item le temps d’accès à une route ;
+  \item la couverture d’un réseau mobile ;
+  \item la proximité d’une administration publique.
+\end{itemize}
+
+
+
+Ces mesures permettent de construire des indicateurs d’accessibilité.
+
+
+
+
+## Exemple 4 : politiques publiques localisées
+
+Certaines politiques publiques ne s’appliquent pas partout de la même manière.
+
+
+
+Elles peuvent cibler :
+
+\begin{itemize}
+  \item certaines communes ;
+  \item certaines écoles ;
+  \item certaines régions ;
+  \item certaines zones frontalières ;
+  \item certaines zones exposées à un risque.
+\end{itemize}
+
+## Exemple 4
+
+Les données spatiales permettent alors de définir :
+
+\begin{itemize}
+  \item les zones traitées ;
+  \item les zones de comparaison ;
+  \item les distances aux frontières du traitement ;
+  \item les unités exposées indirectement.
+\end{itemize}
+
+
+
+
+La localisation peut aider à définir un traitement, une exposition ou un groupe de contrôle.
+
+
+## Exemple 4 
+
+\centering
+
+![](figures/map_pp.jpg)
+
+
+
+## Carte descriptive ou variable empirique ?
+
+Une carte peut avoir deux fonctions différentes.
+
+
+
+\begin{enumerate}
+  \item \textbf{Illustrer un phénomène}  
+  \begin{itemize}
+    \item carte du revenu par région ;
+    \item carte des émissions de CO₂ par pays ;
+    \item carte de la densité de population.
+  \end{itemize}
+
+  \item \textbf{Construire une variable d’analyse}  
+  \begin{itemize}
+    \item distance à une infrastructure ;
+    \item exposition à un choc climatique ;
+    \item nombre d’écoles dans une zone ;
+    \item appartenance à une zone traitée.
+  \end{itemize}
+\end{enumerate}
+
+
+
+
+## Ce que nous allons apprendre à faire
+
+Dans cette séance, nous allons voir comment utiliser R pour :
+
+
+
+\begin{itemize}
+  \item lire une carte sous forme de fichier spatial ;
+  \item comprendre la structure d’un objet spatial ;
+  \item vérifier un système de coordonnées ;
+  \item joindre une base statistique à une carte ;
+  \item produire une carte thématique ;
+  \item manipuler des points et des polygones ;
+  \item calculer des distances ou des intersections ;
+  \item introduire les données raster.
+\end{itemize}
+
+
+
+
+
+# Comprendre les objets spatiaux
+
+## Qu’est-ce qu’une donnée spatiale ?
+
+Une donnée spatiale est une donnée associée à une localisation.
+
+
+
+Elle contient généralement deux types d’information :
+
+\begin{itemize}
+  \item une information \textbf{attributaire} : nom, population, revenu, émission, statut ;
+  \item une information \textbf{géographique} : coordonnées, forme, position, surface.
+\end{itemize}
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item une école avec sa latitude et sa longitude ;
+  \item une commune avec ses frontières ;
+  \item une route avec son tracé ;
+  \item une grille climatique avec une température par pixel.
+\end{itemize}
+
+
+
+Une donnée spatiale est une donnée classique à laquelle on ajoute une dimension géographique.
+
+
+## Les grandes familles de données spatiales
+
+On distingue principalement deux grands types de données spatiales.
+
+
+
+\begin{enumerate}
+  \item \textbf{Données vectorielles}
+  \begin{itemize}
+    \item points ;
+    \item lignes ;
+    \item polygones.
+  \end{itemize}
+
+  \item \textbf{Données raster}
+  \begin{itemize}
+    \item grille de pixels ;
+    \item une valeur associée à chaque cellule ;
+    \item utile pour les phénomènes continus.
+  \end{itemize}
+\end{enumerate}
+
+
+
+
+## Les données vectorielles
+
+Les données vectorielles représentent des objets géographiques précis.
+
+
+
+Elles peuvent prendre plusieurs formes :
+
+\begin{itemize}
+  \item \textbf{points} : écoles, entreprises, ménages, antennes, centrales ;
+  \item \textbf{lignes} : routes, chemins de fer, rivières, câbles ;
+  \item \textbf{polygones} : pays, régions, communes, zones administratives.
+\end{itemize}
+
+
+![](figures/Vecteur.png)
+
+## Les données vectorielles
+
+
+Exemples en économie appliquée :
+
+\begin{itemize}
+  \item distance d’un ménage à une route ;
+  \item nombre d’écoles dans une commune ;
+  \item exposition d’une entreprise à une zone traitée.
+\end{itemize}
+
+
+
+
+
+
+## Les données raster
+
+Les données raster sont organisées sous forme de grille.
+
+
+
+Chaque cellule ou pixel contient une valeur.
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item température ;
+  \item précipitations ;
+  \item altitude ;
+  \item luminosité nocturne ;
+  \item occupation des sols ;
+  \item indice de végétation.
+\end{itemize}
+
+
+
+Ces données sont très utilisées pour mesurer des phénomènes continus dans l’espace.
+
+
+
+Ex : On peut calculer la température moyenne observée dans chaque commune à partir d’un raster climatique.
+
+## Les données raster
+
+\centering
+
+![](figures/Raster.png)
+
+
+## Points, polygones et rasters : exemples
+
+Une même question de recherche peut combiner plusieurs types de données.
+
+
+
+Exemple : étudier l’effet des infrastructures scolaires sur les résultats éducatifs.
+
+
+
+\begin{itemize}
+  \item \textbf{Points} : localisation des écoles ;
+  \item \textbf{Polygones} : communes ou districts scolaires ;
+  \item \textbf{Rasters} : densité de population ou accessibilité routière.
+\end{itemize}
+
+
+
+On peut ensuite construire des variables :
+
+\begin{itemize}
+  \item nombre d’écoles par commune ;
+  \item distance à l’école la plus proche ;
+  \item population exposée dans un rayon donné.
+\end{itemize}
+
+
+
+
+
+## Coordonnées géographiques
+
+Pour localiser un point sur la Terre, on utilise souvent deux coordonnées :
+
+
+
+$$
+\text{longitude}, \text{latitude}
+$$
+
+
+
+\begin{itemize}
+  \item la \textbf{longitude} indique la position est-ouest ;
+  \item la \textbf{latitude} indique la position nord-sud.
+\end{itemize}
+
+
+
+Exemple :
+
+$$
+\text{Paris} \approx 2.35^\circ, 48.85^\circ
+$$
+
+
+
+Attention : Les coordonnées en longitude-latitude sont exprimées en degrés, pas en mètres.
+
+
+## CRS : système de coordonnées
+
+Un CRS indique comment les coordonnées géographiques doivent être interprétées. CRS signifie Coordinate Reference System
+
+
+Il définit notamment :
+
+\begin{itemize}
+  \item le système de référence utilisé ;
+  \item l’unité des coordonnées ;
+  \item la manière de représenter la Terre ;
+  \item la projection éventuelle utilisée.
+\end{itemize}
+
+
+
+Exemples fréquents :
+
+\begin{itemize}
+  \item \texttt{EPSG:4326} : coordonnées longitude-latitude, souvent utilisé par le GPS ;
+  \item \texttt{EPSG:3857} : projection souvent utilisée pour les cartes web ;
+  \item \texttt{EPSG:2154} : Lambert-93, souvent utilisé pour la France.
+\end{itemize}
+
+
+
+Avant toute opération spatiale, vérifier le CRS des données.
+
+
+## Pourquoi les projections comptent ?
+
+La Terre est une surface courbe.
+
+
+
+Une carte est une représentation plane de cette surface.
+
+
+
+Passer d’un globe à une carte implique donc toujours des déformations :
+
+\begin{itemize}
+  \item des surfaces ;
+  \item des formes ;
+  \item des distances ;
+  \item des angles.
+\end{itemize}
+
+
+
+Aucune projection n’est parfaite : le choix dépend de l’usage.
+
+
+
+
+Le bon système de projection dépend de ce que l’on veut faire : afficher, mesurer une distance, calculer une surface ou comparer des territoires.
+
+
+## 
+
+\centering
+
+![](figures/Mercator size vs true country size Neil Kaye.jpeg)
+
+## Projection et calcul de distance
+
+Les calculs de distance sont sensibles au système de coordonnées.
+
+
+
+Si les données sont en longitude-latitude :
+
+$$
+\text{les coordonnées sont en degrés}
+$$
+
+
+
+Si les données sont projetées :
+
+$$
+\text{les coordonnées peuvent être en mètres}
+$$
+
+
+
+Pour calculer des distances locales, il est souvent préférable d’utiliser une projection adaptée.
+
+
+
+Ex : Pour travailler sur la France métropolitaine, on utilise souvent le Lambert-93 : EPSG:2154.
+
+## Projection et calcul de distance
+
+\centering
+![](figures/Lambert.png)
+
+
+## Projection et calcul de distance
+
+\centering
+![](figures/RGF93.png)
+
+
+## Formats de fichiers fréquents
+
+Les données spatiales peuvent être stockées dans plusieurs formats.
+
+
+
+Pour les données vectorielles :
+
+\begin{itemize}
+  \item \texttt{.shp} : shapefile, format très répandu ;
+  \item \texttt{.gpkg} : GeoPackage, format plus moderne ;
+  \item \texttt{.geojson} : format pratique pour le web.
+\end{itemize}
+
+
+
+Pour les données raster :
+
+\begin{itemize}
+  \item \texttt{.tif} ou \texttt{.tiff} : GeoTIFF ;
+  \item \texttt{.nc} : NetCDF, souvent utilisé pour les données climatiques.
+\end{itemize}
+
+
+
+Bonne pratique :
+Pour les nouveaux projets, le format GeoPackage est souvent plus pratique qu’un shapefile.
+
+
+
+## L’objet sf dans R
+
+Dans R, le package sf permet de manipuler des données vectorielles.
+
+
+
+Un objet sf ressemble à un tableau de données classique.
+
+
+
+La différence principale est qu’il contient une colonne spéciale : **geometry**
+
+
+
+Cette colonne contient les coordonnées ou les formes géographiques.
+
+
+## L'objet sf
+
+\centering
+
+![](figures/sf_object.png)
+
+## Pourquoi sf est pratique ?
+
+Comme un objet sf est proche d’un tableau classique, on peut souvent utiliser les outils du tidyverse.
+
+
+
+Par exemple, on peut :
+
+\begin{itemize}
+  \item sélectionner des variables avec \texttt{select()} ;
+  \item filtrer des observations avec \texttt{filter()} ;
+  \item créer des variables avec \texttt{mutate()} ;
+  \item faire des jointures avec \texttt{left\_join()} ;
+  \item agréger avec \texttt{group\_by()} et \texttt{summarise()}.
+\end{itemize}
+
+
+
+
+## Les opérations spatiales de base
+
+Les données spatiales permettent de réaliser des opérations spécifiques.
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item calculer une distance entre deux objets ;
+  \item savoir si un point se trouve dans un polygone ;
+  \item créer une zone tampon autour d’un lieu ;
+  \item agréger plusieurs polygones ;
+  \item calculer une surface ;
+  \item extraire une valeur raster dans une zone.
+\end{itemize}
+
+
+
+
+## Les erreurs classiques avec les objets spatiaux
+
+Quelques erreurs sont très fréquentes.
+
+
+
+\begin{itemize}
+  \item Calculer une distance alors que les coordonnées sont en degrés.
+  \item Joindre deux bases avec des codes géographiques incompatibles.
+  \item Mélanger des objets avec des CRS différents.
+  \item Oublier les valeurs manquantes après une jointure.
+  \item Interpréter une carte sans regarder les classes de couleur.
+  \item Confondre une carte descriptive avec une relation causale.
+\end{itemize}
+
+
+
+
+
+
+# Lire et manipuler des données avec sf
+
+
+## Charger les packages utiles
+
+On commence par charger les packages nécessaires.
+
+
+
+```{r, eval=FALSE}
+library(tidyverse)
+library(sf)
+```
+
+
+Le package sf permet de lire, manipuler et sauvegarder des données vectorielles.
+
+
+
+Le package tidyverse permet d’utiliser les fonctions habituelles de manipulation de données.
+
+
+
+Bonne pratique : Toujours charger les packages au début du script pour rendre le code plus lisible.
+
+
+
+
+
+
+## Importer une couche géographique
+
+On importe une couche spatiale avec la fonction st_read().
+
+
+
+```{r, eval=FALSE}
+world_map <- st_read("data/raw/world-administrative-boundaries.shp")
+```
+
+
+Cette commande crée un objet appelé world_map.
+
+
+
+L’objet contient :
+
+\begin{itemize}
+\item des variables attributaires ;
+\item une colonne géographique ;
+\item le système de coordonnées de la couche.
+\end{itemize}
+
+
+
+
+st_read() est l’équivalent spatial de read_csv().
+
+
+
+
+
+
+## Inspecter un objet sf
+
+Un objet sf peut être inspecté comme une base de données classique.
+
+
+
+```{r, eval=FALSE}
+glimpse(world_map)
+
+names(world_map)
+
+head(world_map)
+```
+
+
+On peut alors identifier :
+
+\begin{itemize}
+\item les variables disponibles ;
+\item le nombre d’observations ;
+\item les codes géographiques ;
+\item la colonne de géométrie.
+\end{itemize}
+
+
+
+
+Avant toute carte, toujours regarder la structure de l’objet spatial.
+
+
+
+
+
+
+## Afficher rapidement la géométrie
+
+On peut afficher uniquement la géométrie d’un objet sf.
+
+
+
+```{r, eval=FALSE}
+plot(st_geometry(world_map))
+```
+
+
+Cette commande permet de vérifier rapidement :
+
+\begin{itemize}
+\item si la couche s’affiche correctement ;
+\item si les formes géographiques semblent cohérentes ;
+\item si l’étendue spatiale correspond à ce que l’on attend.
+\end{itemize}
+
+
+
+Bonne pratique : Un premier plot() permet souvent de repérer rapidement un problème de géométrie ou de projection.
+
+
+
+
+
+
+## Vérifier le système de coordonnées
+
+Chaque couche spatiale possède un système de coordonnées.
+
+
+
+On peut le vérifier avec :
+
+```{r, eval=FALSE}
+st_crs(world_map)
+```
+
+
+Cette commande indique notamment :
+
+\begin{itemize}
+\item le code EPSG ;
+\item le nom du système de coordonnées ;
+\item l’unité utilisée ;
+\item la projection éventuelle.
+\end{itemize}
+
+
+
+
+Avant de calculer une distance ou une surface, toujours vérifier le CRS.
+
+
+
+
+
+
+## Sélectionner des variables
+
+Comme avec une base classique, on peut sélectionner certaines colonnes.
+
+
+
+```{r, eval=FALSE}
+world_small <- world_map %>%
+  select(name, iso3, continent, geometry)
+```
+
+
+La colonne geometry contient les formes géographiques.
+
+
+
+Même si elle n’est pas explicitement sélectionnée, sf conserve souvent la géométrie active.
+
+
+
+
+
+
+
+## Filtrer des objets géographiques
+
+On peut filtrer des pays, régions ou communes avec filter().
+
+
+
+```{r, eval=FALSE}
+europe_map <- world_map %>%
+  filter(continent == "Europe")
+```
+
+
+On peut ensuite afficher le résultat.
+
+```{r, eval=FALSE}
+plot(st_geometry(europe_map))
+```
+
+
+Ex : Ici, on crée une nouvelle couche contenant uniquement les pays européens.
+
+
+
+
+
+
+## Créer de nouvelles variables
+
+On peut créer de nouvelles variables comme dans une base classique.
+
+
+
+```{r, eval=FALSE}
+world_map <- world_map %>%
+  mutate(
+    is_europe = continent == "Europe"
+  )
+```
+
+
+Cette variable peut ensuite être utilisée :
+
+\begin{itemize}
+\item pour filtrer la base ;
+\item pour colorer une carte ;
+\item pour définir un groupe d’analyse.
+\end{itemize}
+
+
+
+
+
+
+
+## Supprimer temporairement la géométrie
+
+Parfois, on souhaite travailler uniquement sur la table attributaire.
+
+
+
+On peut retirer la géométrie avec :
+
+```{r, eval=FALSE}
+world_table <- world_map %>%
+  st_drop_geometry()
+```
+
+
+Cela permet de produire des tableaux, des statistiques ou des vérifications sans conserver les géométries.
+
+
+
+Exemple :
+```{r, eval=FALSE}
+world_table %>%
+  count(continent)
+```
+
+
+Bonne pratique : Utiliser st_drop_geometry() lorsque la géométrie n’est pas nécessaire.
+
+
+
+
+
+
+## Transformer une projection
+
+On peut changer le système de coordonnées avec st_transform().
+
+
+
+```{r, eval=FALSE}
+world_map_3857 <- world_map %>%
+  st_transform(3857)
+```
+
+
+Pour la France métropolitaine, on utilise souvent le Lambert-93 :
+
+```{r, eval=FALSE}
+france_map_2154 <- world_map %>%
+  filter(iso3 == "FRA") %>%
+  st_transform(2154)
+```
+
+
+
+st_transform() ne change pas la forme réelle des objets : il change leur représentation dans un autre système de coordonnées.
+
+
+
+
+
+
+## Calculer une surface
+
+Une fois la projection adaptée, on peut calculer des surfaces.
+
+
+
+```{r, eval=FALSE}
+france_map_2154 <- france_map_2154 %>%
+  mutate(
+    area_km2 = as.numeric(st_area(geometry)) / 1e6
+  )
+```
+
+
+La fonction st_area() calcule la surface des géométries.
+
+
+
+On divise par 1e6 pour passer de mètres carrés à kilomètres carrés.
+
+
+
+
+$\rightarrow$ Pour calculer une surface, utiliser une projection adaptée et vérifier l’unité.
+
+
+
+
+
+
+## Calculer un centroïde
+
+Un centroïde est un point qui résume la position d’un polygone.
+
+
+
+```{r, eval=FALSE}
+world_centroids <- world_map %>%
+  st_centroid()
+```
+
+Les centroïdes sont utiles pour :
+
+\begin{itemize}
+\item placer des labels ;
+\item calculer des distances approximatives ;
+\item représenter des points à partir de polygones ;
+\item simplifier certaines opérations spatiales.
+\end{itemize}
+
+
+
+Attention : Le centroïde n’est pas toujours situé à l’intérieur du polygone, notamment pour les formes complexes.
+
+
+
+
+
+
+## Agréger des polygones
+
+On peut agréger plusieurs polygones avec group_by() et summarise().
+
+
+
+```{r, eval=FALSE}
+continents_map <- world_map %>%
+  group_by(continent) %>%
+  summarise(
+    n_countries = n(),
+    .groups = "drop"
+  )
+```
+
+
+Cette opération permet de passer : pays $\rightarrow$ continents
+
+
+Avec sf, summarise() agrège aussi les géométries.
+
+
+
+
+
+
+## Créer une zone tampon
+
+Une zone tampon, ou \textit{buffer}, correspond à une zone autour d’un objet spatial.
+
+
+
+```{r, eval=FALSE}
+france_buffer <- france_map_2154 %>%
+  st_buffer(dist = 100000)
+```
+
+
+Ici, on crée une zone de 100 km autour de la France.
+
+
+
+Les buffers sont utiles pour construire des variables d’exposition :
+
+\begin{itemize}
+\item être situé à moins de 10 km d’une route ;
+\item être situé autour d’une école ;
+\item être proche d’une frontière ;
+\item être exposé à une infrastructure.
+\end{itemize}
+
+
+
+Attention : La distance du buffer dépend de l’unité du CRS utilisé.
+
+
+
+
+
+
+## Sauvegarder une couche spatiale
+
+Après manipulation, on peut sauvegarder une nouvelle couche.
+
+
+
+```{r, eval=FALSE}
+st_write(
+  europe_map,
+  "data/clean/europe_map.gpkg",
+  delete_dsn = TRUE
+)
+```
+
+
+Le format .gpkg est pratique car il stocke les données et la géométrie dans un seul fichier.
+
+
+
+Bonne pratique : Sauvegarder les couches nettoyées dans un dossier data/clean.
+
+
+
+
+
+
+## Chaîne simple de traitement
+
+On peut regrouper plusieurs étapes dans une seule chaîne.
+
+
+
+```{r, eval=FALSE}
+europe_map <- world_map %>%
+  filter(continent == "Europe") %>%
+  select(name, iso3, continent, geometry) %>%
+  st_transform(3035) %>%
+  mutate(
+    area_km2 = as.numeric(st_area(geometry)) / 1e6
+  )
+```
+
+
+Cette chaîne permet de :
+
+\begin{itemize}
+\item sélectionner l’Europe ;
+\item garder quelques variables utiles ;
+\item changer de projection ;
+\item calculer une surface.
+\end{itemize}
+
+
+
+
+
+
+
+## À retenir
+
+Le package sf permet de manipuler simplement les données vectorielles.
+
+
+
+Les commandes principales à retenir sont :
+
+\begin{itemize}
+  \item \texttt{st\_read()} : importer une couche spatiale ;
+  \item \texttt{st\_crs()} : vérifier le système de coordonnées ;
+  \item \texttt{st\_transform()} : changer de projection ;
+  \item \texttt{st\_geometry()} : accéder à la géométrie ;
+  \item \texttt{st\_drop\_geometry()} : retirer la géométrie ;
+  \item \texttt{st\_area()} : calculer une surface ;
+  \item \texttt{st\_centroid()} : calculer des centroïdes ;
+  \item \texttt{st\_buffer()} : créer une zone tampon ;
+  \item \texttt{st\_write()} : sauvegarder une couche.
+\end{itemize}
+
+
+
+
+
+# Produire une première carte
+
+## Produire une première carte
+
+Dans ce bloc, nous allons produire nos premières cartes avec R.
+
+
+
+Nous verrons trois approches complémentaires :
+
+\begin{itemize}
+  \item \texttt{plot()} : pour vérifier rapidement une couche spatiale ;
+  \item \texttt{ggplot2} : pour produire une carte statique propre ;
+  \item \texttt{tmap} et \texttt{mapview} : pour produire des cartes cartographiques ou interactives.
+\end{itemize}
+
+
+
+
+
+
+## Une première carte avec plot()
+
+La fonction plot() permet de visualiser rapidement un objet spatial.
+
+
+
+```{r, eval=FALSE}
+plot(st_geometry(world_map))
+```
+
+
+On peut aussi représenter une variable attributaire.
+
+
+```{r, eval=FALSE}
+plot(world_map["continent"])
+```
+
+
+plot() est très utile pour vérifier rapidement que les données s’affichent correctement.
+
+
+
+
+
+## Une carte avec ggplot2
+
+On peut produire une carte avec ggplot2 en utilisant geom_sf().
+
+
+
+```{r, eval=FALSE}
+ggplot(world_map) +
+  geom_sf()
+```
+
+
+geom_sf() reconnaît automatiquement la colonne de géométrie de l’objet sf.
+
+
+
+
+
+
+
+
+## Colorer une carte par continent
+
+On peut utiliser une variable attributaire pour colorer les polygones.
+
+
+
+```{r, eval=FALSE}
+map_continent <- ggplot(world_map) +
+  geom_sf(
+    aes(fill = continent),
+    color = "grey70",
+    size = 0.1
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Carte des continents",
+    fill = "Continent"
+  )
+
+map_continent
+```
+
+
+
+
+
+
+
+## Améliorer la lisibilité
+
+Une carte doit rester simple et lisible.
+
+
+
+On peut supprimer les axes et simplifier l’apparence.
+
+
+
+```{r, eval=FALSE}
+map_continent <- ggplot(world_map) +
+  geom_sf(
+    aes(fill = continent),
+    color = "grey70",
+    size = 0.1
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    panel.grid = element_blank()
+  ) +
+  labs(
+    title = "Carte des continents",
+    fill = "Continent",
+    caption = "Source : données administratives mondiales"
+  )
+
+map_continent
+```
+
+
+
+
+
+
+
+## Carte qualitative ou quantitative ?
+
+Toutes les variables ne se cartographient pas de la même manière.
+
+
+
+On distingue souvent :
+
+\begin{itemize}
+  \item les variables \textbf{qualitatives} : continent, région, type de zone ;
+  \item les variables \textbf{quantitatives} : population, revenu, émissions, densité.
+\end{itemize}
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item \texttt{continent} : variable qualitative ;
+  \item \texttt{population} : variable quantitative ;
+  \item \texttt{co2\_per\_capita} : variable quantitative.
+\end{itemize}
+
+
+
+
+
+
+## Une carte quantitative
+
+Pour une variable quantitative, on utilise une échelle continue.
+
+
+
+Exemple avec une variable de population si elle est disponible dans la base :
+
+```{r, eval=FALSE}
+ggplot(world_map) +
+  geom_sf(
+    aes(fill = population),
+    color = "grey80",
+    size = 0.05
+  ) +
+  scale_fill_viridis_c(
+    na.value = "grey90"
+  ) +
+  theme_minimal() +
+  labs(title = "Population par pays",
+    fill = "Population"  )
+```
+
+
+Attention : Les variables très asymétriques peuvent être difficiles à représenter avec une échelle continue.
+
+
+
+
+
+
+## Gérer les valeurs manquantes
+
+Une carte peut contenir des pays ou zones sans données.
+
+
+
+Il faut les rendre visibles.
+
+
+
+```{r, eval=FALSE}
+ggplot(world_map) +
+  geom_sf(
+    aes(fill = population),
+    color = "grey80",
+    size = 0.05
+  ) +
+  scale_fill_viridis_c(
+    na.value = "grey90"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Population par pays",
+    fill = "Population",
+    caption = "Les zones en gris correspondent aux valeurs manquantes"
+  )
+```
+
+
+Bonne pratique : Ne pas cacher les valeurs manquantes : elles font partie de l’information.
+
+
+
+
+
+## Créer des classes
+
+Pour certaines cartes, une variable catégorisée est plus lisible qu’une échelle continue.
+
+
+
+```{r, eval=FALSE}
+world_map <- world_map %>%
+  mutate(
+    pop_class = cut(
+      population,
+      breaks = c(0, 1e6, 1e7, 5e7, 1e8, Inf),
+      labels = c(
+        "< 1 million",
+        "1-10 millions",
+        "10-50 millions",
+        "50-100 millions",
+        "> 100 millions"
+      )
+    )
+  )
+```
+
+
+Attention : Le choix des classes influence fortement la lecture de la carte.
+
+
+
+
+
+
+## Cartographier des classes
+
+Une fois la variable catégorielle créée, on peut la représenter.
+
+
+
+```{r, eval=FALSE}
+ggplot(world_map) +
+  geom_sf(
+    aes(fill = pop_class),
+    color = "grey80",
+    size = 0.05
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Population par pays",
+    fill = "Classe de population"
+  )
+```
+
+
+
+Les classes facilitent la lecture, mais elles simplifient l’information initiale.
+
+
+
+
+
+## Une carte avec tmap
+
+Le package tmap est conçu spécifiquement pour faire des cartes.
+
+
+
+```{r, eval=FALSE}
+library(tmap)
+
+tm_shape(world_map) +
+  tm_polygons("continent")
+```
+
+
+tmap est utile pour produire rapidement des cartes cartographiques propres.
+
+
+ggplot2 est très flexible ; tmap est souvent plus directement pensé pour la cartographie.
+
+
+
+
+
+
+## Une carte interactive avec mapview
+
+Le package mapview permet de visualiser rapidement une couche sur une carte interactive.
+
+
+
+```{r, eval=FALSE}
+library(mapview)
+
+mapview(world_map)
+```
+
+
+On peut zoomer, se déplacer et explorer les objets spatiaux.
+
+
+
+
+mapview est très utile pour explorer les données, mais moins adapté à une figure finale d’article.
+
+
+
+
+
+
+## Quel outil utiliser ?
+
+Chaque outil a un usage différent.
+
+
+
+\begin{itemize}
+  \item \texttt{plot()} : vérifier rapidement les données ;
+  \item \texttt{ggplot2} : produire des figures intégrées à un workflow tidyverse ;
+  \item \texttt{tmap} : produire des cartes cartographiques rapidement ;
+  \item \texttt{mapview} : explorer les données de manière interactive.
+\end{itemize}
+
+
+
+
+Pour un article ou un rapport, on privilégie souvent ggplot2 ou tmap. Pour explorer les données, mapview est très pratique.
+
+
+
+## Les choix qui comptent
+
+Une carte n’est jamais neutre.
+
+
+
+Plusieurs choix influencent son interprétation :
+
+\begin{itemize}
+  \item la projection utilisée ;
+  \item la variable représentée ;
+  \item l’échelle de couleur ;
+  \item le choix des classes ;
+  \item la gestion des valeurs manquantes ;
+  \item le niveau géographique retenu ;
+  \item le titre et la légende.
+\end{itemize}
+
+
+
+
+Une carte doit être lue comme un résultat construit, pas comme une simple image des données.
+
+
+
+# Joindre données statistiques et carte
+
+## Joindre données statistiques et carte
+
+Une carte thématique combine généralement deux types de données.
+
+
+
+\begin{itemize}
+  \item une couche géographique : pays, régions, communes, districts ;
+  \item une base statistique : population, revenu, émissions, indicateurs socio-économiques.
+\end{itemize}
+
+
+
+L’objectif est de joindre ces deux sources pour produire une carte exploitable.
+
+
+
+
+
+## Exemple de question
+
+Nous partons d’une question simple :
+
+
+
+\begin{quote}
+Comment les émissions de CO2 par habitant se répartissent-elles dans le monde ?
+\end{quote}
+
+
+
+Pour répondre à cette question, nous avons besoin :
+
+\begin{itemize}
+  \item d’une carte des pays du monde ;
+  \item d’une base statistique sur les émissions de CO2 ;
+  \item d’un identifiant commun pour faire la jointure ;
+  \item d’une variable à cartographier.
+\end{itemize}
+
+
+Avant une jointure, il faut toujours identifier la clé commune entre les deux bases.
+
+
+
+## Identifier la clé de jointure
+
+Pour joindre deux bases, il faut une variable commune.
+
+
+
+Dans notre exemple :
+
+\begin{itemize}
+  \item la carte contient un code pays : \texttt{iso3} ;
+  \item la base CO2 contient un code pays : \texttt{iso\_code}.
+\end{itemize}
+
+
+
+On va donc joindre les deux bases avec :
+
+```{r, eval=FALSE}
+world_co2 <- world_map %>%
+  left_join(
+    co2_2019,
+    by = c("iso3" = "iso_code")
+  )
+```
+
+
+
+Attention : Une grande partie des erreurs de carte vient de jointures mal faites.
+
+
+
+## Importer la base statistique
+
+On commence par importer la base CO2.
+
+
+
+```{r, eval=FALSE}
+co2_raw <- read_csv("data/raw/owid-co2-data.csv")
+```
+
+
+On garde ensuite l’année 2019 et quelques variables utiles.
+
+
+```{r, eval=FALSE}
+co2_2019 <- co2_raw %>%
+  filter(year == 2019) %>%
+  select(
+    iso_code, country, year,
+    co2_per_capita, population, gdp
+  )
+```
+
+
+Bonne pratique : Avant de joindre, créer une base statistique simple avec uniquement les variables utiles.
+
+
+
+
+
+
+## Vérifier la base à joindre
+
+Avant la jointure, on inspecte rapidement la base statistique.
+
+
+
+```{r, eval=FALSE}
+glimpse(co2_2019)
+
+co2_2019 %>%
+  summarise(
+    n_obs = n(),
+    n_countries = n_distinct(iso_code),
+    missing_co2_pc = sum(is.na(co2_per_capita))
+  )
+```
+
+
+On peut aussi vérifier les codes pays manquants.
+
+
+```{r, eval=FALSE}
+co2_2019 %>%
+  filter(is.na(iso_code)) %>%
+  select(country)
+```
+
+
+
+Toujours vérifier la base statistique avant de la joindre à une carte.
+
+
+
+
+
+## Réaliser la jointure
+
+On joint la base statistique à la carte avec left_join().
+
+
+
+```{r, eval=FALSE}
+world_co2 <- world_map %>%
+  left_join(
+    co2_2019,
+    by = c("iso3" = "iso_code")
+  )
+```
+
+
+Ici, on garde toutes les géométries de la carte et on ajoute les variables CO2 lorsqu’une correspondance existe.
+
+
+
+
+
+
+
+
+## Vérifier le résultat de la jointure
+
+Après une jointure, il faut toujours vérifier ce qui a été apparié ou non.
+
+
+
+```{r, eval=FALSE}
+world_co2 %>%
+  summarise(
+    n_polygons = n(),
+    matched_co2 = sum(!is.na(co2_per_capita)),
+    missing_co2 = sum(is.na(co2_per_capita))
+  )
+```
+
+
+On peut aussi afficher les pays sans données CO2.
+
+
+```{r, eval=FALSE}
+world_co2 %>%
+  filter(is.na(co2_per_capita)) %>%
+  st_drop_geometry() %>%
+  select(name, iso3)
+```
+
+
+Bonne pratique : Une jointure doit toujours être contrôlée : certaines unités peuvent ne pas être appariées.
+
+
+
+
+
+
+## Comprendre les non-appariements
+
+Les non-appariements peuvent venir de plusieurs sources.
+
+
+
+\begin{itemize}
+  \item codes pays différents ;
+  \item territoires présents dans la carte mais absents de la base statistique ;
+  \item agrégats présents dans la base statistique mais absents de la carte ;
+  \item changements de frontières ou de noms ;
+  \item valeurs manquantes pour certaines années.
+\end{itemize}
+
+
+
+Exemples fréquents :
+
+\begin{itemize}
+  \item Kosovo ;
+  \item territoires ultramarins ;
+  \item petits États insulaires ;
+  \item régions ou agrégats comme \textit{World}, \textit{Europe}, \textit{Asia}.
+\end{itemize}
+
+
+
+
+Un pays non apparié n’est pas forcément une erreur, mais il doit être identifié.
+
+
+
+## Première carte des émissions de CO2
+
+Une fois la jointure réalisée, on peut cartographier la variable.
+
+
+
+```{r, eval=FALSE}
+ggplot(world_co2) +
+  geom_sf(
+    aes(fill = co2_per_capita),
+    color = "grey80",
+    size = 0.05
+  ) +
+  scale_fill_viridis_c(
+    na.value = "grey90"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Émissions de CO2 par habitant en 2019",
+    fill = "CO2 par habitant",
+    caption = "Source : Our World in Data"
+  )
+```
+
+
+
+Les pays en gris correspondent aux pays sans valeur disponible ou non appariés.
+
+
+
+
+
+## Rendre la carte plus lisible
+
+Pour une carte thématique, on peut simplifier l’apparence.
+
+
+
+```{r, eval=FALSE}
+map_co2_2019 <- ggplot(world_co2) +
+  geom_sf(
+    aes(fill = co2_per_capita),
+    color = "grey80",
+    size = 0.05
+  ) +
+  scale_fill_viridis_c(
+    na.value = "grey90"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    panel.grid = element_blank()
+  ) +
+  labs(
+    title = "Émissions de CO2 par habitant en 2019",
+    fill = "CO2 par habitant",
+    caption = "Source : Our World in Data"
+  )
+
+map_co2_2019
+```
+
+
+Bonne pratique : Une carte finale doit avoir un titre clair, une légende lisible et une source.
+
+
+
+
+
+
+## Créer des classes de valeurs
+
+Pour certaines variables très asymétriques, une carte en classes peut être plus lisible.
+
+
+
+```{r, eval=FALSE}
+world_co2 <- world_co2 %>%
+  mutate(
+    co2_class = cut(
+      co2_per_capita,
+      breaks = c(0, 1, 3, 5, 10, 20, Inf),
+      labels = c(
+        "< 1",
+        "1-3",
+        "3-5",
+        "5-10",
+        "10-20",
+        "> 20"
+      )
+    )
+  )
+```
+
+
+
+Attention : Le choix des seuils influence fortement la lecture de la carte.
+
+
+
+
+
+
+## Cartographier les classes
+
+On peut ensuite représenter la variable catégorisée.
+
+
+
+```{r, eval=FALSE}
+ggplot(world_co2) +
+  geom_sf(
+    aes(fill = co2_class),
+    color = "grey80",
+    size = 0.05
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    panel.grid = element_blank()
+  ) +
+  labs(
+    title = "Émissions de CO2 par habitant en 2019",
+    fill = "Tonnes par habitant",
+    caption = "Source : Our World in Data"
+  )
+```
+
+
+Les classes facilitent la lecture, mais elles simplifient une variable continue.
+
+
+
+
+
+## Comparer deux variables cartographiées
+
+Une fois la jointure faite, on peut cartographier différentes variables.
+
+
+
+Par exemple, la population :
+
+```{r, eval=FALSE}
+ggplot(world_co2) +
+  geom_sf(
+    aes(fill = population),
+    color = "grey80",
+    size = 0.05
+  ) +
+  scale_fill_viridis_c(
+    trans = "log10",
+    na.value = "grey90"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Population par pays en 2019",
+    fill = "Population",
+    caption = "Source : Our World in Data"
+  )
+```
+
+
+
+
+
+
+
+## Attention aux échelles
+
+Les cartes peuvent donner des impressions différentes selon la variable représentée.
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item émissions totales de CO2 ;
+  \item émissions de CO2 par habitant ;
+  \item PIB total ;
+  \item PIB par habitant ;
+  \item population ;
+  \item densité de population.
+\end{itemize}
+
+
+
+Ces variables ne répondent pas aux mêmes questions.
+
+
+
+
+
+
+## Carte et interprétation
+
+Une carte des émissions de CO2 par habitant permet de visualiser des différences spatiales.
+
+
+
+Mais elle ne permet pas directement d’expliquer ces différences.
+
+
+
+Pour interpréter la carte, il faut tenir compte :
+
+\begin{itemize}
+  \item du niveau de développement ;
+  \item de la structure productive ;
+  \item de la géographie ;
+  \item des ressources énergétiques ;
+  \item de la population ;
+  \item des choix de mesure.
+\end{itemize}
+
+
+
+Une carte décrit une distribution spatiale ; elle ne suffit pas à identifier une relation causale.
+
+
+
+## Sauvegarder la carte
+
+On peut sauvegarder une carte avec ggsave().
+
+
+
+```{r, eval=FALSE}
+ggsave(
+  filename = "outputs/figures/map_co2_2019.png",
+  plot = map_co2_2019,
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+```
+
+
+
+Cela permet de réutiliser la carte dans :
+
+\begin{itemize}
+\item un article ;
+\item un rapport ;
+\item une présentation ;
+\item un document RMarkdown.
+\end{itemize}
+
+
+
+Bonne pratique : Sauvegarder les figures produites dans un dossier outputs/figures.
+
+
+# Points, distances et intersections
+
+## Points, distances et intersections
+
+Les données spatiales ne servent pas seulement à produire des cartes.
+
+
+
+Elles permettent aussi de construire des variables utiles pour l’analyse empirique.
+
+
+
+Dans ce bloc, nous allons voir comment :
+
+\begin{itemize}
+  \item manipuler des données ponctuelles ;
+  \item convertir une table avec coordonnées en objet spatial ;
+  \item projeter des points sur une carte ;
+  \item calculer des distances ;
+  \item compter des points dans des polygones ;
+  \item identifier des intersections spatiales.
+\end{itemize}
+
+
+
+
+
+
+## Pourquoi travailler avec des points ?
+
+De nombreuses données utilisées en économie appliquée sont localisées par des coordonnées.
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item écoles ;
+  \item ménages ;
+  \item entreprises ;
+  \item hôpitaux ;
+  \item antennes téléphoniques ;
+  \item centrales électriques ;
+  \item conflits ou manifestations ;
+  \item infrastructures publiques.
+\end{itemize}
+
+
+
+Ces observations peuvent être représentées comme des points.
+
+
+
+Dès qu’une observation a une latitude et une longitude, elle peut devenir une donnée spatiale.
+
+
+
+## Exemple de question empirique
+
+Supposons que l’on dispose de la localisation de centrales électriques.
+
+
+
+On peut se poser plusieurs questions :
+
+\begin{itemize}
+  \item Dans quels pays ces centrales sont-elles situées ?
+  \item Combien de centrales se trouvent dans chaque pays ?
+  \item Quelle est la distance entre chaque pays et la centrale la plus proche ?
+  \item Quels territoires sont situés à moins de 50 km d’une centrale ?
+  \item Les zones proches d’une infrastructure ont-elles des trajectoires économiques différentes ?
+\end{itemize}
+
+
+
+Ex : Transformer des coordonnées géographiques en variables d’exposition à une infrastructure.
+
+
+
+## Charger une base de points
+
+On peut lire une couche de points comme n’importe quelle couche spatiale.
+
+
+
+```{r, eval=FALSE}
+power_plants <- st_read("data/raw/Global_Power_Plants/Power_Plants.shp")
+```
+
+
+On inspecte ensuite l’objet.
+
+
+```{r, eval=FALSE}
+glimpse(power_plants)
+
+st_crs(power_plants)
+
+plot(st_geometry(power_plants))
+```
+
+
+
+Comme pour les polygones, on vérifie toujours la structure, la géométrie et le CRS.
+
+
+
+
+
+
+## Créer des points à partir de coordonnées
+
+Parfois, les données ne sont pas encore spatiales.
+
+
+
+Elles peuvent simplement contenir deux colonnes :
+
+$$
+\text{longitude}, \text{latitude}
+$$
+
+
+
+On peut les convertir en objet sf avec st_as_sf().
+
+```{r, eval=FALSE}
+power_plants_sf <- power_plants_df %>%
+  st_as_sf(
+    coords = c("longitude", "latitude"),
+    crs = 4326
+  )
+```
+
+
+Attention : Il faut indiquer le bon CRS : les coordonnées longitude-latitude sont généralement en EPSG:4326.
+
+
+
+
+
+
+## Afficher des points sur une carte
+
+On peut superposer les points à une carte de polygones.
+
+
+
+```{r, eval=FALSE}
+ggplot() +
+  geom_sf(data = world_map, fill = "grey95", color = "grey80") +
+  geom_sf(data = power_plants, size = 0.5, alpha = 0.6) +
+  theme_minimal() +
+  labs(
+    title = "Localisation des centrales électriques"
+  )
+
+```
+
+
+Les polygones donnent le contexte géographique ; les points représentent les unités localisées.
+
+
+
+
+
+
+## Filtrer un type de points
+
+Si la base contient plusieurs types d’infrastructures, on peut filtrer les observations.
+
+
+
+```{r, eval=FALSE}
+nuclear_plants <- power_plants %>%
+  filter(fuel1 == "Nuclear")
+```
+
+
+Puis afficher uniquement ces points.
+
+
+```{r, eval=FALSE}
+ggplot() +
+  geom_sf(data = world_map, fill = "grey95", color = "grey80") +
+  geom_sf(data = nuclear_plants, size = 0.8, alpha = 0.7) +
+  theme_minimal() +
+  labs(
+    title = "Centrales nucléaires"
+  )
+```
+
+
+Ex : On peut isoler un type d’infrastructure pour construire une variable d’exposition spécifique.
+
+
+
+
+
+## Harmoniser les projections
+
+Avant certaines opérations spatiales, les objets doivent avoir le même CRS.
+
+
+
+```{r, eval=FALSE}
+st_crs(world_map)
+st_crs(power_plants)
+```
+
+
+Si nécessaire, on transforme la projection.
+
+
+```{r, eval=FALSE}
+power_plants <- st_transform(power_plants, st_crs(world_map))
+```
+
+
+
+Avant une intersection, une distance ou une jointure spatiale, vérifier que les CRS sont compatibles.
+
+
+
+
+
+## Sélectionner une zone d’étude
+
+On peut restreindre l’analyse à une zone géographique.
+
+
+
+```{r, eval=FALSE}
+europe_map <- world_map %>%
+  filter(continent == "Europe")
+```
+
+
+On peut ensuite garder les points situés dans cette zone.
+
+
+```{r, eval=FALSE}
+
+power_plants_europe <- power_plants %>%
+  st_filter(europe_map)
+```
+
+
+
+st_filter() permet de garder les objets qui intersectent une couche spatiale.
+
+
+
+
+
+
+## Points dans polygones
+
+Une opération classique consiste à identifier dans quel polygone se trouve chaque point.
+
+
+
+```{r, eval=FALSE}
+plants_with_country <- power_plants %>%
+  st_join(world_map)
+```
+
+
+Cette opération ajoute aux points les informations du polygone dans lequel ils se trouvent.
+
+
+
+Exemple :
+
+\begin{itemize}
+\item une centrale reçoit le code du pays où elle est localisée ;
+\item une école reçoit le nom de la commune ;
+\item un ménage reçoit l’identifiant du district.
+\end{itemize}
+
+
+
+
+
+
+
+
+## Compter des points dans des polygones
+
+On peut compter le nombre de points dans chaque pays ou région.
+
+
+
+```{r, eval=FALSE}
+points_in_country <- st_intersects(world_map, power_plants)
+
+world_map$n_power_plants <- lengths(points_in_country)
+```
+
+
+La variable n_power_plants indique le nombre de centrales dans chaque pays.
+
+
+
+Ex : Construire le nombre d’infrastructures disponibles dans une unité administrative.
+
+
+
+
+
+## Cartographier un comptage
+
+Une fois le nombre de points calculé, on peut produire une carte.
+
+
+
+```{r, eval=FALSE}
+ggplot(world_map) +
+  geom_sf(
+    aes(fill = n_power_plants),
+    color = "grey80",
+    size = 0.05
+  ) +
+  scale_fill_viridis_c(
+    na.value = "grey90"
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Nombre de centrales électriques par pays",
+    fill = "Nombre"
+  )
+```
+
+
+Attention : Un nombre total dépend souvent de la taille du pays : une densité peut parfois être plus informative.
+
+
+
+
+
+
+## Calculer une densité
+
+Pour comparer des pays de tailles différentes, on peut calculer une densité.
+
+
+
+```{r, eval=FALSE}
+world_map <- world_map %>%
+  st_transform(3857) %>%
+  mutate(
+    area_km2 = as.numeric(st_area(geometry)) / 1e6,
+    density_power_plants = n_power_plants / area_km2
+  )
+```
+
+
+Cette variable mesure le nombre de centrales par km².
+
+
+
+Passer d’un nombre total à une densité peut changer fortement l’interprétation.
+
+
+
+
+
+
+## Calculer des centroïdes
+
+Pour calculer des distances entre pays, on peut utiliser leurs centroïdes.
+
+
+
+```{r, eval=FALSE}
+world_centroids <- world_map %>%
+  st_centroid()
+```
+
+
+Les centroïdes sont des points représentant approximativement les polygones.
+
+
+
+Ils peuvent être utilisés pour :
+
+\begin{itemize}
+\item calculer des distances entre pays ;
+\item placer des labels ;
+\item simplifier des géométries complexes.
+\end{itemize}
+
+
+
+Attention : Le centroïde est une approximation : il peut être peu pertinent pour certains pays très étendus ou discontinus.
+
+
+
+
+
+## Calculer une distance à une infrastructure
+
+On peut calculer la distance entre des pays et une infrastructure.
+
+
+
+Exemple : distance entre les centroïdes des pays et les centrales nucléaires.
+
+```{r, eval=FALSE}
+world_centroids <- world_centroids %>%
+  st_transform(3857)
+
+nuclear_plants <- nuclear_plants %>%
+  st_transform(3857)
+
+dist_to_nuclear <- st_distance(world_centroids, nuclear_plants)
+```
+
+
+Le résultat est une matrice de distances.
+
+
+
+Attention : Pour interpréter une distance en mètres, il faut travailler dans une projection adaptée.
+
+
+
+
+
+
+## Distance minimale
+
+À partir de la matrice de distances, on peut calculer la distance à l’infrastructure la plus proche.
+
+
+
+```{r, eval=FALSE}
+world_centroids$dist_nearest_nuclear_km <- apply(
+  dist_to_nuclear,
+  1,
+  min
+) / 1000
+```
+
+
+Cette variable mesure, pour chaque pays, la distance au point le plus proche.
+
+
+
+Ex : Distance à l’école la plus proche, au centre de santé le plus proche, à la route la plus proche, à une frontière ou à une antenne.
+
+
+
+
+
+
+## Créer une zone tampon autour des points
+
+On peut créer une zone autour de chaque point avec st_buffer().
+
+
+
+```{r, eval=FALSE}
+nuclear_buffer_50km <- nuclear_plants %>%
+  st_buffer(dist = 50000)
+```
+
+
+Ici, on crée une zone de 50 km autour de chaque centrale nucléaire.
+
+
+
+Usage : Les buffers permettent de définir une zone d’exposition autour d’une infrastructure ou d’un événement.
+
+
+
+
+
+## Identifier les zones exposées
+
+On peut identifier les polygones qui intersectent une zone tampon.
+
+
+
+```{r, eval=FALSE}
+world_map$near_nuclear_50km <- lengths(
+  st_intersects(world_map, nuclear_buffer_50km)
+) > 0
+```
+
+
+Cette variable vaut TRUE si le pays intersecte au moins une zone de 50 km autour d’une centrale.
+
+
+
+Ex : Créer une variable binaire d’exposition à une infrastructure ou à un traitement.
+
+
+
+
+
+
+## Cartographier une exposition
+
+On peut représenter la variable d’exposition sur une carte.
+
+
+
+```{r, eval=FALSE}
+ggplot(world_map) +
+  geom_sf(
+    aes(fill = near_nuclear_50km),
+    color = "grey80",
+    size = 0.05
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Pays situés à proximité d’une centrale nucléaire",
+    fill = "À moins de 50 km"
+  )
+```
+
+
+
+La carte distingue les territoires exposés et non exposés selon une règle spatiale explicite.
+
+
+
+
+
+
+## Différence entre jointure et intersection
+
+Il faut distinguer deux opérations.
+
+
+
+\begin{itemize}
+  \item \textbf{Jointure attributaire} : on utilise une clé commune.
+  \begin{itemize}
+    \item Exemple : joindre par code pays.
+  \end{itemize}
+
+  \item \textbf{Jointure spatiale} : on utilise la position géographique.
+  \begin{itemize}
+    \item Exemple : attribuer un pays à chaque point selon sa localisation.
+  \end{itemize}
+\end{itemize}
+
+
+
+
+## Exemples de variables empiriques
+
+Les opérations spatiales permettent de construire de nombreuses variables.
+
+
+
+\begin{itemize}
+  \item distance à la route la plus proche ;
+  \item distance à la capitale ;
+  \item nombre d’écoles dans une commune ;
+  \item exposition à une infrastructure dans un rayon donné ;
+  \item appartenance à une zone traitée ;
+  \item distance à une frontière ;
+  \item densité d’événements autour d’un lieu ;
+  \item nombre de conflits dans une cellule.
+\end{itemize}
+
+
+
+
+
+## Les erreurs classiques
+
+Quelques erreurs sont fréquentes lorsque l’on manipule des points et des distances.
+
+
+
+\begin{itemize}
+  \item calculer des distances avec des coordonnées en degrés ;
+  \item oublier de transformer les CRS ;
+  \item compter des points sans vérifier les frontières utilisées ;
+  \item confondre distance au centroïde et distance réelle ;
+  \item créer un buffer avec une mauvaise unité ;
+  \item interpréter une exposition spatiale comme un effet causal.
+\end{itemize}
+
+
+
+
+
+# Introduction aux rasters
+
+## Introduction aux rasters
+
+Dans ce bloc, nous introduisons un autre grand type de données spatiales : les données raster.
+
+
+
+Nous verrons comment :
+
+\begin{itemize}
+  \item comprendre la structure d’un raster ;
+  \item lire un fichier raster dans R ;
+  \item afficher un raster ;
+  \item manipuler une grille de pixels ;
+  \item extraire des valeurs raster vers des points ou des polygones ;
+  \item utiliser ces données pour construire des variables empiriques.
+\end{itemize}
+
+
+
+Un raster est une grille spatiale : chaque pixel contient une valeur.
+
+
+## Qu’est-ce qu’un raster ?
+
+Un raster est une image géoréférencée.
+
+
+
+Il est composé de cellules ou de pixels.
+
+
+
+Chaque pixel contient une valeur :
+
+\begin{itemize}
+  \item température ;
+  \item précipitations ;
+  \item altitude ;
+  \item luminosité nocturne ;
+  \item couverture forestière ;
+  \item pollution ;
+  \item accessibilité.
+\end{itemize}
+
+
+
+Ex : Un raster climatique peut indiquer la température moyenne dans chaque pixel d’une grille mondiale.
+
+
+
+## Pourquoi les rasters sont utiles en économie ?
+
+Les rasters permettent de mesurer des phénomènes continus dans l’espace.
+
+
+
+Ils sont très utilisés pour étudier :
+
+\begin{itemize}
+  \item les effets du climat sur l’agriculture ;
+  \item l’impact des sécheresses sur les revenus ;
+  \item la relation entre activité économique et luminosité nocturne ;
+  \item l’exposition à la pollution ;
+  \item l’accessibilité aux marchés ;
+  \item l’occupation des sols.
+\end{itemize}
+
+
+
+
+Les rasters permettent d’associer une information environnementale ou géographique à des unités économiques.
+
+
+## Vecteur ou raster ?
+
+Les données vectorielles et raster ne décrivent pas l’espace de la même manière.
+
+
+
+\begin{itemize}
+  \item \textbf{Vecteur} : objets géographiques précis.
+  \begin{itemize}
+    \item écoles, routes, communes, pays.
+  \end{itemize}
+
+  \item \textbf{Raster} : grille régulière de pixels.
+  \begin{itemize}
+    \item température, pluie, altitude, night lights.
+  \end{itemize}
+\end{itemize}
+
+
+
+
+## Exemple de question empirique
+
+Supposons que l’on étudie l’effet de la chaleur sur les revenus agricoles.
+
+
+
+On peut combiner :
+
+\begin{itemize}
+  \item une base de ménages ou de communes ;
+  \item une carte des limites administratives ;
+  \item un raster de température ;
+  \item éventuellement un raster de précipitations.
+\end{itemize}
+
+
+
+Objectif :
+
+$$
+\text{raster climatique}
+\rightarrow
+\text{exposition locale}
+\rightarrow
+\text{variable empirique}
+$$
+
+
+
+Ex : Calculer la température moyenne observée dans chaque commune, puis l’utiliser dans une régression.
+
+
+
+## Le package terra
+
+Pour manipuler des rasters dans R, on utilise aujourd’hui souvent le package terra.
+
+
+
+```{r, eval=FALSE}
+library(terra)
+```
+
+
+terra permet notamment de :
+
+\begin{itemize}
+\item lire des fichiers raster ;
+\item afficher des rasters ;
+\item reprojeter des rasters ;
+\item découper des rasters ;
+\item extraire des valeurs vers des points ou polygones ;
+\item faire des calculs sur les pixels.
+\end{itemize}
+
+
+
+
+Beaucoup d’anciens codes utilisent raster. Pour les nouveaux projets, on privilégie souvent terra.
+
+
+
+
+
+
+## Lire un raster
+
+On lit un fichier raster avec la fonction rast().
+
+
+
+```{r, eval=FALSE}
+temp_raster <- rast("data/raw/temperature.tif")
+```
+
+
+On peut ensuite inspecter l’objet.
+
+
+```{r, eval=FALSE}
+temp_raster
+
+crs(temp_raster)
+
+plot(temp_raster)
+```
+
+
+
+rast() est l’équivalent raster de st_read() pour les données vectorielles.
+
+
+
+
+
+
+## Comprendre un raster
+
+Un raster contient plusieurs informations importantes.
+
+
+
+\begin{itemize}
+  \item le nombre de lignes et de colonnes ;
+  \item la résolution spatiale ;
+  \item l’étendue géographique ;
+  \item le système de coordonnées ;
+  \item le nombre de couches ;
+  \item les valeurs des pixels.
+\end{itemize}
+
+
+
+```{r, eval=FALSE}
+nrow(temp_raster)
+ncol(temp_raster)
+res(temp_raster)
+ext(temp_raster)
+crs(temp_raster)
+```
+
+
+
+Avant d’utiliser un raster, vérifier sa résolution, son étendue et son CRS.
+
+
+
+
+
+
+## Raster à une couche ou plusieurs couches
+
+Un raster peut contenir une seule couche ou plusieurs couches.
+
+
+
+Exemples :
+
+\begin{itemize}
+  \item une couche : température moyenne annuelle ;
+  \item douze couches : température moyenne par mois ;
+  \item plusieurs années : night lights par année ;
+  \item plusieurs variables : température, pluie, altitude.
+\end{itemize}
+
+
+
+On peut afficher le nom des couches :
+
+```{r, eval=FALSE}
+names(temp_raster)
+```
+
+
+Et sélectionner une couche :
+
+```{r, eval=FALSE}
+temp_may <- temp_raster[[5]]
+```
+
+
+
+Ex : Si chaque couche correspond à un mois, [[5]] peut représenter le mois de mai.
+
+
+
+
+
+## Afficher un raster
+
+On peut afficher rapidement un raster avec plot().
+
+
+
+```{r, eval=FALSE}
+plot(temp_may)
+```
+
+
+Pour une carte plus personnalisée, on peut convertir le raster en tableau.
+
+
+```{r, eval=FALSE}
+temp_may_df <- as.data.frame(
+  temp_may,
+  xy = TRUE,
+  na.rm = TRUE
+)
+```
+
+
+
+Pour explorer rapidement, plot() suffit. Pour produire une figure personnalisée, on peut passer par ggplot2.
+
+
+
+
+
+
+## Cartographier un raster avec ggplot2
+
+Après conversion en tableau, on peut utiliser ggplot2.
+
+
+
+```{r, eval=FALSE}
+ggplot(temp_may_df, aes(x = x, y = y)) +
+  geom_raster(aes(fill = temp_may)) +
+  coord_equal() +
+  theme_minimal() +
+  labs(
+    title = "Température moyenne en mai",
+    x = "Longitude",
+    y = "Latitude",
+    fill = "Température"
+  )
+```
+
+
+
+geom_raster() permet de représenter une grille de pixels avec ggplot2.
+
+
+
+
+
+
+## Découper un raster
+
+Souvent, on ne veut garder qu’une zone d’étude.
+
+
+
+Exemple : découper un raster sur l’Europe.
+
+
+
+```{r, eval=FALSE}
+europe_map <- world_map %>%
+  filter(continent == "Europe")
+
+temp_europe <- crop(temp_raster, vect(europe_map))
+temp_europe <- mask(temp_europe, vect(europe_map))
+```
+
+
+\begin{itemize}
+\item \texttt{crop()} réduit l’étendue rectangulaire du raster ;
+\item \texttt{mask()} conserve uniquement la zone exacte du polygone.
+\end{itemize}
+
+
+
+Bonne pratique : Découper un raster permet de réduire la taille des données et de travailler uniquement sur la zone utile.
+
+
+
+
+
+
+## Harmoniser les projections
+
+Comme pour les vecteurs, les rasters ont un CRS.
+
+
+
+Avant de combiner raster et vecteur, il faut vérifier leurs systèmes de coordonnées.
+
+
+
+```{r, eval=FALSE}
+crs(temp_raster)
+st_crs(world_map)
+```
+
+
+Si nécessaire, on peut reprojeter le raster.
+
+
+```{r, eval=FALSE}
+temp_raster_proj <- project(
+  temp_raster,
+  "EPSG:4326"
+)
+```
+
+
+Attention : Reprojeter un raster peut être coûteux et modifier les valeurs par interpolation.
+
+
+
+
+
+
+## Extraire une valeur raster vers des points
+
+Si l’on dispose de points, on peut extraire la valeur du pixel correspondant.
+
+
+
+```{r, eval=FALSE}
+points_temp <- terra::extract(
+  temp_raster,
+  vect(points_sf)
+)
+```
+
+
+On peut ensuite ajouter la valeur extraite à la base de points.
+
+
+```{r, eval=FALSE}
+points_sf$temp <- points_temp[, 2]
+```
+
+
+Ex : Associer à chaque école, ménage ou entreprise la température observée à sa localisation.
+
+
+
+
+
+## Extraire une moyenne vers des polygones
+
+Si l’on dispose de polygones, on peut calculer une moyenne des pixels dans chaque zone.
+
+
+
+Avec le package exactextractr :
+
+
+
+```{r, eval=FALSE}
+library(exactextractr)
+
+world_map$mean_temp <- exact_extract(
+  temp_raster,
+  world_map,
+  "mean"
+)
+```
+
+
+Cette commande calcule la température moyenne dans chaque polygone.
+
+
+
+Ex : Calculer la pluie moyenne par commune, la température moyenne par district ou les night lights moyens par région.
+
+
+
+
+
+## Construire une base d’analyse avec un raster
+
+L’objectif est souvent d’ajouter une variable raster à une base statistique.
+
+
+
+Exemple de workflow :
+
+$$
+\text{raster}
+\rightarrow
+\text{extraction par polygone}
+\rightarrow
+\text{nouvelle variable}
+\rightarrow
+\text{base d’analyse}
+$$
+
+
+
+```{r, eval=FALSE}
+communes$mean_temp <- exact_extract(
+  temp_raster,
+  communes,
+  "mean"
+)
+
+analysis_data <- communes %>%
+  st_drop_geometry() %>%
+  select(code_commune, mean_temp, population, income)
+```
+
+
+
+
+
+
+
+## Exemple : luminosité nocturne
+
+Les données de luminosité nocturne sont souvent utilisées comme proxy d’activité économique locale.
+
+
+
+Elles permettent d’étudier :
+
+\begin{itemize}
+  \item la croissance locale ;
+  \item l’activité économique dans les zones sans statistiques fiables ;
+  \item les effets de conflits ou catastrophes ;
+  \item l’électrification ;
+  \item l’urbanisation.
+\end{itemize}
+
+
+
+Workflow typique :
+
+$$
+\text{raster night lights}
+\rightarrow
+\text{moyenne par unité géographique}
+\rightarrow
+\text{panel spatial}
+$$
+
+
+
+Attention : Les night lights sont utiles, mais ce sont des proxies : leur interprétation doit être prudente.
+
+
+
+## Exemple : climat et agriculture
+
+Les rasters climatiques permettent de mesurer l’exposition aux conditions météorologiques.
+
+
+
+Exemples de variables :
+
+\begin{itemize}
+  \item température moyenne ;
+  \item nombre de jours très chauds ;
+  \item cumul annuel de précipitations ;
+  \item anomalie de pluie ;
+  \item indice de sécheresse.
+\end{itemize}
+
+
+
+Ces variables peuvent être reliées à :
+
+\begin{itemize}
+  \item production agricole ;
+  \item revenus ;
+  \item migrations ;
+  \item santé ;
+  \item conflits.
+\end{itemize}
+
+
+
+
+## Les erreurs classiques avec les rasters
+
+Quelques erreurs sont fréquentes.
+
+
+
+\begin{itemize}
+  \item oublier de vérifier la résolution du raster ;
+  \item mélanger des rasters avec des CRS différents ;
+  \item interpréter un pixel comme une observation individuelle ;
+  \item extraire une moyenne sans vérifier la zone couverte ;
+  \item oublier les valeurs manquantes ;
+  \item comparer des rasters de résolution différente sans précaution ;
+  \item oublier l’unité de la variable.
+\end{itemize}
+
+
+
+

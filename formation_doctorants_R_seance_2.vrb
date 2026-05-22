@@ -1,0 +1,30 @@
+\frametitle{Construire une base d'analyse avec un raster}
+\phantomsection\label{construire-une-base-danalyse-avec-un-raster}
+L'objectif est souvent d'ajouter une variable raster à une base
+statistique.
+
+Exemple de workflow :
+
+\[
+\text{raster}
+\rightarrow
+\text{extraction par polygone}
+\rightarrow
+\text{nouvelle variable}
+\rightarrow
+\text{base d’analyse}
+\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{communes}\SpecialCharTok{$}\NormalTok{mean\_temp }\OtherTok{\textless{}{-}} \FunctionTok{exact\_extract}\NormalTok{(}
+\NormalTok{  temp\_raster,}
+\NormalTok{  communes,}
+  \StringTok{"mean"}
+\NormalTok{)}
+
+\NormalTok{analysis\_data }\OtherTok{\textless{}{-}}\NormalTok{ communes }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{st\_drop\_geometry}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(code\_commune, mean\_temp, population, income)}
+\end{Highlighting}
+\end{Shaded}
