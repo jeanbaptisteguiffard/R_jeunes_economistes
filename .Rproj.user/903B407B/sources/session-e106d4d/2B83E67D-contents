@@ -522,7 +522,7 @@ ggsave(
 # Charger une base de points
 # ------------------------------------------------------------
 
-power_plants <- st_read("data/raw/Global_Power_Plants/Power_Plants.shp")
+power_plants <- st_read("DATA/Power_Plants.shp")
 
 glimpse(power_plants)
 
@@ -534,6 +534,8 @@ plot(st_geometry(power_plants))
 # ------------------------------------------------------------
 # Créer des points à partir de coordonnées
 # ------------------------------------------------------------
+
+# Exemple
 
 power_plants_sf <- power_plants_df %>%
   st_as_sf(
@@ -713,128 +715,3 @@ ggplot(world_map) +
 
 library(terra)
 
-
-# ------------------------------------------------------------
-# Lire un raster
-# ------------------------------------------------------------
-
-temp_raster <- rast("data/raw/temperature.tif")
-
-temp_raster
-
-crs(temp_raster)
-
-plot(temp_raster)
-
-
-# ------------------------------------------------------------
-# Comprendre un raster
-# ------------------------------------------------------------
-
-nrow(temp_raster)
-ncol(temp_raster)
-res(temp_raster)
-ext(temp_raster)
-crs(temp_raster)
-
-
-# ------------------------------------------------------------
-# Raster à une couche ou plusieurs couches
-# ------------------------------------------------------------
-
-names(temp_raster)
-
-temp_may <- temp_raster[[5]]
-
-
-# ------------------------------------------------------------
-# Afficher un raster
-# ------------------------------------------------------------
-
-plot(temp_may)
-
-temp_may_df <- as.data.frame(
-  temp_may,
-  xy = TRUE,
-  na.rm = TRUE
-)
-
-
-# ------------------------------------------------------------
-# Cartographier un raster avec ggplot2
-# ------------------------------------------------------------
-
-ggplot(temp_may_df, aes(x = x, y = y)) +
-  geom_raster(aes(fill = temp_may)) +
-  coord_equal() +
-  theme_minimal() +
-  labs(
-    title = "Température moyenne en mai",
-    x = "Longitude",
-    y = "Latitude",
-    fill = "Température"
-  )
-
-
-# ------------------------------------------------------------
-# Découper un raster
-# ------------------------------------------------------------
-
-europe_map <- world_map %>%
-  filter(continent == "Europe")
-
-temp_europe <- crop(temp_raster, vect(europe_map))
-temp_europe <- mask(temp_europe, vect(europe_map))
-
-
-# ------------------------------------------------------------
-# Harmoniser les projections
-# ------------------------------------------------------------
-
-crs(temp_raster)
-st_crs(world_map)
-
-temp_raster_proj <- project(
-  temp_raster,
-  "EPSG:4326"
-)
-
-
-# ------------------------------------------------------------
-# Extraire une valeur raster vers des points
-# ------------------------------------------------------------
-
-points_temp <- terra::extract(
-  temp_raster,
-  vect(points_sf)
-)
-
-points_sf$temp <- points_temp[, 2]
-
-
-# ------------------------------------------------------------
-# Extraire une moyenne vers des polygones
-# ------------------------------------------------------------
-
-library(exactextractr)
-
-world_map$mean_temp <- exact_extract(
-  temp_raster,
-  world_map,
-  "mean"
-)
-
-
-# ------------------------------------------------------------
-# Construire une base d’analyse avec un raster
-# ------------------------------------------------------------
-
-communes$mean_temp <- exact_extract(
-  temp_raster,
-  communes,
-  "mean"
-)
-
-analysis_data <- communes %>%
-  st_drop_geometry() %>%
-  select(code_commune, mean_temp, population, income)
