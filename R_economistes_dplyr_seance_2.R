@@ -164,7 +164,7 @@ europe_map <- world_map %>%
 plot(st_geometry(world_map))
 
 plot(world_map["continent"])
-
+plot(europe_map['area_km2'])
 
 # ------------------------------------------------------------
 # Une carte avec ggplot2

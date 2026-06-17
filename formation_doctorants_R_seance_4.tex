@@ -1,0 +1,948 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  10pt,
+  ignorenonframetext,
+]{beamer}
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{part title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{part title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\usetheme[]{Berlin}
+\usecolortheme{dolphin}
+\usefonttheme{serif} % use mainfont rather than sansfont for slide text
+\ifPDFTeX\else
+  % xetex/luatex font selection
+  \setmainfont[]{Calibri}
+  \setsansfont[]{Calibri}
+  \setmonofont[]{Consolas}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\newif\ifbibliography
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% ----------------------------
+% Fonts
+% ----------------------------
+\usepackage{fontspec}
+\setmainfont{Calibri}
+\setsansfont{Calibri}
+\setmonofont{Consolas}
+\renewcommand{\familydefault}{\sfdefault}
+
+% ----------------------------
+% Packages usuels
+% ----------------------------
+\usepackage{amssymb,amsmath,amsthm,enumerate}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{caption}
+\captionsetup[figure]{labelformat=empty}
+\usepackage{subcaption}
+\usepackage{bm}
+\usepackage{multicol}
+\usepackage{tcolorbox}
+\usepackage{siunitx}
+\usepackage{booktabs}
+
+% ----------------------------
+% Beamer navigation
+% ----------------------------
+% Supprimer les icônes en bas
+\setbeamertemplate{navigation symbols}{}
+
+% Activer les mini-frames (petits ronds)
+\useoutertheme{miniframes}
+
+% Section en gras dans la barre du haut
+\setbeamerfont{section in head/foot}{series=\bfseries}
+
+% ----------------------------
+% Headline sur 2 lignes :
+% 1) Sections (en haut)
+% 2) Mini-frames seuls (en dessous)
+% ----------------------------
+\makeatletter
+\setbeamertemplate{headline}{%
+  % --- Ligne 1 : sections
+  \begin{beamercolorbox}[wd=\paperwidth,ht=2.8ex,dp=1.2ex]{section in head/foot}%
+    \insertsectionnavigationhorizontal{\paperwidth}{}{}%
+  \end{beamercolorbox}%
+}
+\makeatother
+
+% ----------------------------
+% (Optionnel) : pas de barre sur la slide de titre
+% ----------------------------
+\addtobeamertemplate{title page}{\setbeamertemplate{headline}{}}{}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={R pour jeunes économistes},
+  pdfauthor={J.-B. Guiffard},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{R pour jeunes économistes}
+\subtitle{RMarkdown et production de documents}
+\author{J.-B. Guiffard}
+\date{5 juin 2026}
+
+\begin{document}
+\frame{\titlepage}
+
+\section{RMarkdown et production de
+documents}\label{rmarkdown-et-production-de-documents}
+
+\begin{frame}{Objet de la séance}
+\phantomsection\label{objet-de-la-suxe9ance}
+Cette dernière séance est consacrée à la production de documents avec
+\textbf{RMarkdown}.
+
+L'objectif est de comprendre comment passer :
+
+\[
+\text{script R} \rightarrow \text{document reproductible} \rightarrow \text{rapport / slides / html / pdf}
+\]
+
+Nous verrons comment utiliser RMarkdown pour :
+
+\begin{itemize}
+\tightlist
+\item
+  rédiger du texte ;
+\item
+  intégrer du code R ;
+\item
+  produire automatiquement des tableaux ;
+\item
+  intégrer des graphiques ;
+\item
+  générer plusieurs formats de sortie ;
+\item
+  automatiser la production de rapports.
+\end{itemize}
+
+\(\Rightarrow\) RMarkdown permet de réunir dans un même fichier le
+raisonnement, le code et les résultats.
+\end{frame}
+
+\begin{frame}{Pourquoi utiliser RMarkdown ?}
+\phantomsection\label{pourquoi-utiliser-rmarkdown}
+Dans un travail de recherche, on produit souvent :
+
+\begin{itemize}
+\tightlist
+\item
+  des statistiques descriptives ;
+\item
+  des graphiques ;
+\item
+  des tableaux de régression ;
+\item
+  des cartes ;
+\item
+  des rapports intermédiaires ;
+\item
+  des supports de présentation.
+\end{itemize}
+
+Avec un workflow classique, ces éléments sont souvent produits
+séparément puis copiés-collés dans Word, PowerPoint ou LaTeX.
+
+Avec RMarkdown, on peut produire ces éléments directement à partir du
+code.
+
+\(\Rightarrow\) Cela réduit les erreurs manuelles et facilite la mise à
+jour des résultats.
+\end{frame}
+
+\begin{frame}{RMarkdown comme outil de recherche reproductible}
+\phantomsection\label{rmarkdown-comme-outil-de-recherche-reproductible}
+RMarkdown permet de produire un document à partir d'un fichier source
+unique.
+
+Ce fichier contient :
+
+\begin{itemize}
+\tightlist
+\item
+  le texte ;
+\item
+  le code ;
+\item
+  les résultats ;
+\item
+  les graphiques ;
+\item
+  les tableaux ;
+\item
+  les options du document.
+\end{itemize}
+
+\[
+\text{texte + code + données}
+\rightarrow
+\text{document final}
+\]
+\end{frame}
+
+\begin{frame}[fragile]{Plan de la séance}
+\phantomsection\label{plan-de-la-suxe9ance}
+La séance est organisée en six étapes.
+
+\begin{enumerate}
+\tightlist
+\item
+  Comprendre le principe de RMarkdown
+\item
+  Créer un premier document \texttt{.Rmd}
+\item
+  Écrire du texte avec la syntaxe Markdown
+\item
+  Insérer du code R et contrôler les chunks
+\item
+  Intégrer tableaux, graphiques et résultats
+\item
+  Automatiser et paramétrer des rapports
+\end{enumerate}
+\end{frame}
+
+\section{Comprendre RMarkdown}\label{comprendre-rmarkdown}
+
+\begin{frame}[fragile]{Qu'est-ce qu'un fichier RMarkdown ?}
+\phantomsection\label{quest-ce-quun-fichier-rmarkdown}
+Un fichier RMarkdown est un fichier texte avec l'extension
+\texttt{.Rmd}.
+
+Il permet de mélanger :
+
+\begin{itemize}
+\tightlist
+\item
+  du texte ;
+\item
+  des titres ;
+\item
+  des équations ;
+\item
+  du code R ;
+\item
+  des sorties produites par R.
+\end{itemize}
+
+Exemple :
+
+mean(c(1, 2, 3, 4, 5))
+
+Après compilation, le résultat est intégré dans le document final.
+\end{frame}
+
+\begin{frame}[fragile]{Le principe général}
+\phantomsection\label{le-principe-guxe9nuxe9ral}
+RMarkdown fonctionne en deux étapes.
+
+\[
+\text{.Rmd}
+\rightarrow
+\text{.md}
+\rightarrow
+\text{document final}
+\]
+
+Première étape :
+
+\begin{itemize}
+\tightlist
+\item
+  le package \texttt{knitr} exécute le code R ;
+\item
+  les résultats sont insérés dans un document Markdown.
+\end{itemize}
+
+Deuxième étape :
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{pandoc} transforme le document en HTML, PDF, Word ou slides.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Quels formats peut-on produire ?}
+\phantomsection\label{quels-formats-peut-on-produire}
+À partir d'un même fichier \texttt{.Rmd}, on peut produire plusieurs
+formats.
+
+\begin{itemize}
+  \item \texttt{html\_document} : rapport HTML ;
+  \item \texttt{pdf\_document} : rapport PDF ;
+  \item \texttt{word\_document} : document Word ;
+  \item \texttt{beamer\_presentation} : slides PDF ;
+  \item \texttt{ioslides\_presentation} : slides HTML.
+\end{itemize}
+
+Le contenu reste le même, mais le format de sortie peut changer.
+\end{frame}
+
+\begin{frame}{Pourquoi c'est utile pour un doctorant ?}
+\phantomsection\label{pourquoi-cest-utile-pour-un-doctorant}
+RMarkdown est particulièrement utile pour :
+
+\begin{itemize}
+\tightlist
+\item
+  produire des rapports intermédiaires ;
+\item
+  documenter une analyse empirique ;
+\item
+  préparer un support de séminaire ;
+\item
+  partager des résultats avec des co-auteurs ;
+\item
+  produire des annexes reproductibles ;
+\item
+  automatiser des tableaux ou graphiques.
+\end{itemize}
+
+Exemple : Lorsque les données changent, il suffit de recompiler le
+document pour mettre à jour les résultats.
+\end{frame}
+
+\section{Créer un premier document
+RMarkdown}\label{cruxe9er-un-premier-document-rmarkdown}
+
+\begin{frame}{Structure générale d'un document}
+\phantomsection\label{structure-guxe9nuxe9rale-dun-document}
+Un document RMarkdown contient deux grandes parties :
+
+\begin{enumerate}
+\tightlist
+\item
+  un en-tête YAML ;
+\item
+  un corps de document.
+\end{enumerate}
+
+L'en-tête définit les métadonnées et le format de sortie.
+
+Le corps contient le texte, le code et les résultats.
+
+title: ``Analyse des émissions de CO2'' author: ``Prénom Nom'' date:
+``2026-06-05'' output: html\_document
+\end{frame}
+
+\begin{frame}{Exemple d'en-tête simple}
+\phantomsection\label{exemple-den-tuxeate-simple}
+title: ``Analyse des émissions de CO2'' subtitle: ``Exemple de rapport
+reproductible'' author: ``Jean-Baptiste Guiffard'' date: ``5 juin 2026''
+output: html\_document
+
+Cet en-tête indique :
+
+\begin{itemize}
+\tightlist
+\item
+  le titre du document ;
+\item
+  le sous-titre ;
+\item
+  l'auteur ;
+\item
+  la date ;
+\item
+  le format de sortie.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Plusieurs formats de sortie}
+\phantomsection\label{plusieurs-formats-de-sortie}
+On peut demander plusieurs formats dans le même fichier.
+
+title: ``Analyse des émissions de CO2'' author: ``Prénom Nom'' output:
+html\_document: toc: true pdf\_document: toc: true word\_document:
+default
+
+Cela permet de produire :
+
+\begin{itemize}
+\tightlist
+\item
+  un rapport HTML ;
+\item
+  un rapport PDF ;
+\item
+  un document Word.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Le chunk setup}
+\phantomsection\label{le-chunk-setup}
+Au début du document, on ajoute souvent un chunk appelé \texttt{setup}.
+
+knitr::opts\_chunk\$set( echo = TRUE, warning = FALSE, message = FALSE )
+
+Ce chunk permet de définir les options par défaut.
+
+Ici :
+
+\begin{itemize}
+\tightlist
+\item
+  le code est affiché ;
+\item
+  les warnings ne sont pas affichés ;
+\item
+  les messages ne sont pas affichés.
+\end{itemize}
+\end{frame}
+
+\section{Écrire du texte avec
+Markdown}\label{uxe9crire-du-texte-avec-markdown}
+
+\begin{frame}[fragile]{Titres, texte et listes}
+\phantomsection\label{titres-texte-et-listes}
+La syntaxe Markdown est légère.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\# Titre de niveau 1}
+
+\FunctionTok{\#\# Titre de niveau 2}
+
+\FunctionTok{\#\#\# Titre de niveau 3}
+
+\NormalTok{Ceci est du texte avec *de l’italique* et **du gras**.}
+
+\SpecialStringTok{{-} }\NormalTok{premier élément}
+\SpecialStringTok{{-} }\NormalTok{deuxième élément}
+\SpecialStringTok{{-} }\NormalTok{troisième élément}
+\end{Highlighting}
+\end{Shaded}
+
+Markdown permet d'écrire un document lisible même avant compilation.
+\end{frame}
+
+\begin{frame}[fragile]{Liens, images et équations}
+\phantomsection\label{liens-images-et-uxe9quations}
+On peut insérer un lien :
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{[}\OtherTok{Our World in Data}\CommentTok{](https://ourworldindata.org/)}
+\end{Highlighting}
+\end{Shaded}
+
+On peut insérer une image :
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AlertTok{![Titre de la figure](figures/ma\_figure.png)}\NormalTok{\{width=70\%\}}
+\end{Highlighting}
+\end{Shaded}
+
+On peut écrire une équation :
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{$$}
+\NormalTok{Y\_i = \textbackslash{}alpha + \textbackslash{}beta X\_i + \textbackslash{}varepsilon\_i}
+\NormalTok{$$}
+\end{Highlighting}
+\end{Shaded}
+\end{frame}
+
+\begin{frame}{Insérer un résultat dans le texte}
+\phantomsection\label{insuxe9rer-un-ruxe9sultat-dans-le-texte}
+On peut insérer un résultat R directement dans une phrase.
+
+La base contient r nrow(co2\_analysis) observations.
+
+Après compilation, R remplace le code par le résultat.
+
+Exemple :
+
+\begin{quote}
+La base contient 4231 observations.
+\end{quote}
+
+Le code inline évite de recopier manuellement des chiffres dans le
+texte.
+\end{frame}
+
+\section{Insérer du code R}\label{insuxe9rer-du-code-r}
+
+\begin{frame}{Qu'est-ce qu'un chunk ?}
+\phantomsection\label{quest-ce-quun-chunk}
+Un chunk est un bloc de code R inséré dans le document.
+
+\{r\}
+
+Lors de la compilation :
+
+\begin{itemize}
+\tightlist
+\item
+  le code peut être exécuté ;
+\item
+  le résultat peut être affiché ;
+\item
+  les graphiques peuvent être intégrés.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Charger les packages}
+\phantomsection\label{charger-les-packages}
+Dans un rapport reproductible, les packages doivent être chargés dans le
+document.
+
+\{r packages, message=FALSE, warning=FALSE\}
+
+Cela permet au document de fonctionner dans une nouvelle session R.
+\end{frame}
+
+\begin{frame}{Importer les données}
+\phantomsection\label{importer-les-donnuxe9es}
+Les données doivent aussi être importées dans le document.
+
+\{r import-data, eval=FALSE\} co2\_raw \textless-
+read\_csv(``data/raw/owid-co2-data.csv'')
+
+On utilise de préférence des chemins relatifs.
+
+À éviter :
+
+\{r, eval=FALSE\}
+read\_csv(``C:/Users/Jean-Baptiste/Desktop/owid-co2-data.csv'')
+\end{frame}
+
+\begin{frame}{Construire une base d'analyse}
+\phantomsection\label{construire-une-base-danalyse}
+On peut construire la base directement dans le document.
+
+\{r build-data, eval=FALSE\} co2\_analysis \textless- co2\_raw
+\%\textgreater\% filter( year \textgreater= 1990, !is.na(iso\_code),
+!is.na(co2\_per\_capita), !is.na(population), !is.na(gdp), population
+\textgreater{} 0, gdp \textgreater{} 0, co2\_per\_capita \textgreater{}
+0 ) \%\textgreater\% mutate( gdp\_per\_capita = gdp / population,
+log\_gdp\_pc = log(gdp\_per\_capita), log\_co2\_pc =
+log(co2\_per\_capita) )
+\end{frame}
+
+\section{Contrôler les chunks}\label{contruxf4ler-les-chunks}
+
+\begin{frame}{Les principales options}
+\phantomsection\label{les-principales-options}
+Les chunks peuvent être contrôlés avec des options.
+
+\begin{itemize}
+  \item \texttt{echo} : afficher ou non le code ;
+  \item \texttt{eval} : exécuter ou non le code ;
+  \item \texttt{include} : inclure ou non le code et les résultats ;
+  \item \texttt{warning} : afficher ou non les warnings ;
+  \item \texttt{message} : afficher ou non les messages ;
+  \item \texttt{fig.width} et \texttt{fig.height} : taille des figures.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Exemple : afficher le résultat mais pas le code}
+\phantomsection\label{exemple-afficher-le-ruxe9sultat-mais-pas-le-code}
+echo=FALSE
+
+\{r desc-table, eval=FALSE\} co2\_analysis \%\textgreater\% summarise(
+observations = n(), countries = n\_distinct(country), mean\_co2\_pc =
+mean(co2\_per\_capita, na.rm = TRUE) )
+
+\begin{itemize}
+\tightlist
+\item
+  le code est exécuté ;
+\item
+  le résultat est affiché ;
+\item
+  le code n'apparaît pas dans le document.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Exemple : montrer le code sans l'exécuter}
+\phantomsection\label{exemple-montrer-le-code-sans-lexuxe9cuter}
+\{r exemple-code, eval=FALSE\} co2\_analysis \%\textgreater\%
+group\_by(year) \%\textgreater\% summarise(mean\_co2 =
+mean(co2\_per\_capita, na.rm = TRUE))
+
+\begin{itemize}
+\tightlist
+\item
+  le code est affiché ;
+\item
+  le code n'est pas exécuté ;
+\item
+  aucun résultat n'est produit.
+\end{itemize}
+\end{frame}
+
+\section{Tableaux dans RMarkdown}\label{tableaux-dans-rmarkdown}
+
+\begin{frame}[fragile]{Produire une table descriptive}
+\phantomsection\label{produire-une-table-descriptive}
+On peut produire une table à partir du code R.
+
+\{r, eval=FALSE\}
+
+desc\_table \textless- co2\_analysis \%\textgreater\% summarise(
+Observations = n(), Pays = n\_distinct(country),
+\texttt{CO2\ moyen\ par\ habitant} = mean(co2\_per\_capita, na.rm =
+TRUE), \texttt{PIB\ moyen\ par\ habitant} = mean(gdp\_per\_capita, na.rm
+= TRUE) )
+
+knitr::kable(desc\_table, digits = 2)
+
+Les chiffres du tableau sont recalculés automatiquement à chaque
+compilation.
+\end{frame}
+
+\begin{frame}{Table par groupe}
+\phantomsection\label{table-par-groupe}
+On peut produire des tableaux par année ou par pays.
+
+\{r, eval=FALSE\}
+
+year\_stats \textless- co2\_analysis \%\textgreater\% group\_by(year)
+\%\textgreater\% summarise( mean\_co2\_pc = mean(co2\_per\_capita, na.rm
+= TRUE), median\_co2\_pc = median(co2\_per\_capita, na.rm = TRUE),
+n\_countries = n\_distinct(country), .groups = ``drop'' )
+
+knitr::kable(head(year\_stats, 10), digits = 2)
+\end{frame}
+
+\begin{frame}{Tableaux plus avancés}
+\phantomsection\label{tableaux-plus-avancuxe9s}
+Pour des besoins plus avancés, on peut utiliser plusieurs packages.
+
+\begin{itemize}
+  \item \texttt{knitr::kable()} : tableaux simples ;
+  \item \texttt{kableExtra} : mise en forme avancée ;
+  \item \texttt{gt} : tableaux modernes ;
+  \item \texttt{flextable} : tableaux pour Word et PowerPoint ;
+  \item \texttt{modelsummary} : tableaux de régressions et statistiques descriptives.
+\end{itemize}
+
+\begin{block}{Conseil}
+Commencer simple avec \texttt{kable()}, puis utiliser des packages plus avancés selon les besoins.
+\end{block}
+\end{frame}
+
+\section{Graphiques dans RMarkdown}\label{graphiques-dans-rmarkdown}
+
+\begin{frame}{Intégrer un graphique ggplot}
+\phantomsection\label{intuxe9grer-un-graphique-ggplot}
+Les graphiques produits par R sont intégrés automatiquement.
+
+\{r graph-distribution, fig.width=7, fig.height=4\}
+
+\{r, eval=FALSE\} ggplot(co2\_analysis, aes(x = log\_co2\_pc)) +
+geom\_histogram(bins = 40) + theme\_minimal() + labs( title =
+``Distribution du log des émissions de CO2 par habitant'', x = ``log(CO2
+par habitant)'', y = ``Nombre d'observations'' )
+\end{frame}
+
+\begin{frame}{Graphique temporel}
+\phantomsection\label{graphique-temporel}
+\{r graph-time, fig.width=7, fig.height=4\} \{r, eval=FALSE\}
+
+co2\_year \textless- co2\_analysis \%\textgreater\% group\_by(year)
+\%\textgreater\% summarise( mean\_co2\_pc = mean(co2\_per\_capita, na.rm
+= TRUE), .groups = ``drop'' )
+
+ggplot(co2\_year, aes(x = year, y = mean\_co2\_pc)) + geom\_line() +
+theme\_minimal() + labs( title = ``Évolution moyenne des émissions de
+CO2 par habitant'', x = ``Année'', y = ``CO2 par habitant moyen'' )
+
+Nommer les chunks facilite la résolution des erreurs.
+\end{frame}
+
+\section{Régressions et résultats}\label{ruxe9gressions-et-ruxe9sultats}
+
+\begin{frame}{Une première régression}
+\phantomsection\label{une-premiuxe8re-ruxe9gression}
+On peut estimer un modèle directement dans le document.
+
+\{r, eval=FALSE\} model\_1 \textless- lm(log\_co2\_pc \textasciitilde{}
+log\_gdp\_pc, data = co2\_analysis)
+
+summary(model\_1)
+
+Cette régression décrit une relation entre PIB par habitant et émissions
+de CO2 par habitant.
+\end{frame}
+
+\begin{frame}[fragile]{Présenter une table de régression}
+\phantomsection\label{pruxe9senter-une-table-de-ruxe9gression}
+\{r regression-table, echo=FALSE\}
+
+\{r, eval=FALSE\}
+
+modelsummary::modelsummary( model\_1, stars = TRUE, title = ``Relation
+entre PIB par habitant et émissions de CO2'' )
+
+Le tableau est produit automatiquement à partir de l'objet
+\texttt{model\_1}.
+\end{frame}
+
+\section{Rapports automatisés}\label{rapports-automatisuxe9s}
+
+\begin{frame}{Pourquoi automatiser un rapport ?}
+\phantomsection\label{pourquoi-automatiser-un-rapport}
+Un rapport automatisé est utile lorsqu'un document doit être mis à jour
+régulièrement.
+
+Exemples :
+
+\begin{itemize}
+\tightlist
+\item
+  rapport mensuel ;
+\item
+  tableau de bord ;
+\item
+  note de suivi ;
+\item
+  rapport par pays ;
+\item
+  rapport par région ;
+\item
+  rapport par année ;
+\item
+  annexe empirique.
+\end{itemize}
+
+Le rapport est produit à partir du code : si les données changent, le
+document peut être mis à jour automatiquement.
+\end{frame}
+
+\begin{frame}{Compiler avec render()}
+\phantomsection\label{compiler-avec-render}
+On peut compiler un fichier RMarkdown depuis R.
+
+\{r, eval=FALSE\} rmarkdown::render(``rapport\_co2.Rmd'')
+
+On peut aussi choisir un environnement propre.
+
+\{r, eval=FALSE\} rmarkdown::render( input = ``rapport\_co2.Rmd'', envir
+= new.env() )
+\end{frame}
+
+\begin{frame}{Rapports paramétrés}
+\phantomsection\label{rapports-paramuxe9truxe9s}
+Un rapport paramétré permet de produire plusieurs documents à partir du
+même modèle.
+
+Exemple : produire un rapport pour un pays donné.
+
+Dans le YAML :
+
+title: ``Rapport CO2'' output: html\_document params: country\_name:
+``France''
+
+Dans le code :
+
+\{r, eval=FALSE\} co2\_country \textless- co2\_analysis \%\textgreater\%
+filter(country == params\$country\_name)
+\end{frame}
+
+\begin{frame}{Générer un rapport pour un pays}
+\phantomsection\label{guxe9nuxe9rer-un-rapport-pour-un-pays}
+\{r, eval=FALSE\} rmarkdown::render( input =
+``rapport\_co2\_parametre.Rmd'', params = list(country\_name =
+``Brazil''), output\_file = ``rapport\_co2\_Brazil.html'', envir =
+new.env() )
+
+On peut produire le même rapport pour un autre pays :
+
+\{r, eval=FALSE\} rmarkdown::render( input =
+``rapport\_co2\_parametre.Rmd'', params = list(country\_name =
+``India''), output\_file = ``rapport\_co2\_India.html'', envir =
+new.env() )
+\end{frame}
+
+\begin{frame}{Générer plusieurs rapports}
+\phantomsection\label{guxe9nuxe9rer-plusieurs-rapports}
+\{r, eval=FALSE\} countries \textless- c(``France'', ``Brazil'',
+``India'')
+
+for (pays in countries) \{ rmarkdown::render( input =
+``rapport\_co2\_parametre.Rmd'', params = list(country\_name = pays),
+output\_file = paste0(``rapport\_co2\_'', pays, ``.html''), envir =
+new.env() ) \}
+
+\begin{block}{Usage}
+Très utile pour produire automatiquement des rapports par pays, région, secteur ou année.
+\end{block}
+\end{frame}
+
+\section{Bonnes pratiques}\label{bonnes-pratiques}
+
+\begin{frame}[fragile]{Organiser son projet}
+\phantomsection\label{organiser-son-projet}
+Un projet RMarkdown doit être organisé clairement.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{projet\_rmarkdown/}
+\NormalTok{├── data/}
+\NormalTok{│   ├── raw/}
+\NormalTok{│   └── clean/}
+\NormalTok{├── scripts/}
+\NormalTok{├── reports/}
+\NormalTok{├── outputs/}
+\NormalTok{│   ├── figures/}
+\NormalTok{│   └── tables/}
+\NormalTok{└── projet\_rmarkdown.Rproj}
+\end{Highlighting}
+\end{Shaded}
+\end{frame}
+
+\begin{frame}{Les erreurs classiques}
+\phantomsection\label{les-erreurs-classiques}
+Quelques erreurs reviennent souvent avec RMarkdown.
+
+\begin{itemize}
+  \item Utiliser des chemins absolus.
+  \item Oublier de charger un package dans le document.
+  \item Utiliser un objet présent dans l’environnement mais non créé dans le `.Rmd`.
+  \item Ne pas nommer les chunks.
+  \item Copier-coller manuellement des chiffres dans le texte.
+  \item Masquer les messages d’erreur au lieu de les comprendre.
+  \item Compiler rarement le document.
+  \item Ne pas vérifier que le document compile dans une nouvelle session.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Conclusion}
+\phantomsection\label{conclusion}
+\centering
+\Large
+
+Merci beaucoup pour votre attention !
+
+\vspace{0.5cm}
+
+\large
+
+Dernière discussion :
+
+Comment pourriez-vous utiliser RMarkdown dans votre propre thèse ?
+\end{frame}
+
+\end{document}

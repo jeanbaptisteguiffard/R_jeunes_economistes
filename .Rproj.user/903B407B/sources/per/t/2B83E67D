@@ -3,7 +3,7 @@
     "path": "C:/Users/Giffarrd/OneDrive/COURS_DISPENSES/ROUEN/R_jeunes_economistes/R_economistes_dplyr_seance_2.R",
     "project_path": "R_economistes_dplyr_seance_2.R",
     "type": "r_source",
-    "hash": "3685896837",
+    "hash": "1878919988",
     "contents": "",
     "dirty": false,
     "created": 1779442342190.0,
@@ -11,17 +11,17 @@
     "relative_order": 4,
     "properties": {
         "tempName": "Untitled1",
-        "source_window_id": "wdiezxbmcl8l8",
+        "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "717,0",
-        "scrollLine": "685"
+        "cursorPosition": "608,24",
+        "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1779445762,
+    "lastKnownWriteTime": 1779452997,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1779445762049,
+    "last_content_update": 1779452997077,
     "read_only": false,
     "read_only_alternatives": []
 }
